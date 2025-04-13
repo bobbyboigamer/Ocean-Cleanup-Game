@@ -151,6 +151,9 @@ class Player extends Entity {
     takeDamage(amount) {
         amount *= this.defense;
         this.health = bound(this.health - amount, 0, this.maxHealth);
+        const damageNoise = createElem("audio", {src: `noise/hit${Math.floor(Math.random() * 3) + 1}.mp3`});
+        damageNoise.play();
+        damageNoise.remove();
     }
 
     update() {
@@ -281,6 +284,9 @@ class Net extends Tool {
             if (dist(netPos[0], netPos[1], shit.x, shit.y) <= this.grabRadius && !shit.dead) {
                 this.shit.push(shit)
                 shit.oof();
+                const pickupNoise = createElem("audio", {src: "noise/pickup.mp3"});
+                pickupNoise.play();
+                pickupNoise.remove();
                 return;
             }
         }
@@ -313,9 +319,6 @@ class HarpoonGun extends Tool {
         this.projectiles.push(new Harpoon(this.x, this.y, polarToCartesian(1, this.rotation), 0.1, shits, this.parentElem, shit => {
             this.shit.push(shit);
             shit.oof();
-            const pickupNoise = createElem("audio", {src: "noise/pickup.mp3"});
-            pickupNoise.play();
-            pickupNoise.remove();
         }));
     }
 }
@@ -495,7 +498,7 @@ addEventListener("DOMContentLoaded", () => {
         document.body.style.backgroundImage = "url('img/background.png')";
         document.getElementById("playScreen").style.display = "none";
         const gameDiv = createElem("div", {}, {position: "absolute", left: "0", top: `${topOffset}px`, overflow: "hidden", display: "block", width: `${tileSize * mapWidth}px`, height: `${tileSize * mapHeight}px`, userSelect: "none", border: "solid 5px black"});
-        gameDiv.appendChild(createElem("audio", {src: "noise/ocean.mp3", loop: true, autoplay: true}))
+        gameDiv.appendChild(createElem("audio", {src: "noise/ocean.mp3", loop: true, autoplay: true, }))
         gameDiv.addEventListener("dragstart", event => event.preventDefault());
         gameDiv.appendChild(trashElem);
         document.body.appendChild(gameDiv);
@@ -505,7 +508,6 @@ addEventListener("DOMContentLoaded", () => {
         const player = new Player(5, 5, gameDiv, localStorage.getItem("harpoon") ? new HarpoonGun(1000, projectiles, gameDiv) : new Net(gameDiv, 1, 1), shit);
         for (let i = 0; i < Math.floor(Math.random() * 10) + 10; i++) {
             shit.push(new MovingShit(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash1.png", "img/trash3.png"]));
-
         }
         let level = 0;
 
@@ -530,10 +532,14 @@ addEventListener("DOMContentLoaded", () => {
             player.shits = shit;
             window.scrollTo(player.x * tileSize - screen.availWidth / 2, player.y * tileSize - screen.availHeight / 2);
             if (player.health <= 0) {
+                const oof = createElem("audio", {src: "noise/oof.mp3"});
+                oof.play();
+                oof.remove();
                 alert("you died score 0");
                 localStorage.clear();
                 gameDiv.remove();
                 document.getElementById("playScreen").style.display = "flex";
+                document.getElementById("trashCounter").textContent = `Trash: ${money}`;
             } else {
                 requestAnimationFrame(gameLoop);
             }

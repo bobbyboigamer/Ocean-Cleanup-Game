@@ -88,10 +88,14 @@ for (const item of items) {
         }
         const level = Number(localStorage.getItem(item.name) ?? 0) + 1;
         localStorage.setItem(item.name, level);
+        item.currentLevel = level;
         money -= cost;
         localStorage.setItem("money", money);
         document.getElementById("trashCounter").textContent = `Trash: ${money}`;
-        document.querySelector(`#${item.name} .price`).textContent = `Cost: ${Math.round(cost * item.costMultiplier)}`
+        document.querySelector(`#${item.name} .price`).textContent = `Cost: ${Math.round(cost * item.costMultiplier ** level)}`;
+        const kaching = createElem("audio", {src: "../noise/kaching.mp3"});
+        kaching.play();
+        kaching.remove();
     })
     shopItem.classList.add("shopItem");
     shopItems.appendChild(shopItem);
