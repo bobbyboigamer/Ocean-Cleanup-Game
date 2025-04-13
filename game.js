@@ -164,6 +164,12 @@ class Player extends Entity {
             this.rotationCenter = [50, 50];
             this.imgHeight = this.image.offsetHeight;
         }
+
+        setInterval(() => {
+            if (this.health < 0.8 * this.maxHealth) {
+                this.health = bound(this.health + 3, 0, this.maxHealth);
+            }
+        }, 1000 * 0.9 ** Number(localStorage.getItem("regen") ?? 0))
     }
 
     takeDamage(amount) {

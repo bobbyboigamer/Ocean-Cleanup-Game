@@ -26,7 +26,7 @@ const items = [
         title: "Buy a Boat",
         description: "Obtain a boat!",
         baseCost: 10,
-        costMultiplier: 1.1
+        costMultiplier: 2
     },
     {
         name: "speed",
@@ -64,7 +64,15 @@ const items = [
         title: "Capacity Upgrade",
         description: "Increase capacity by 1!",
         baseCost: 15,
-        costMultiplier: 1
+        costMultiplier: 1.2
+    },
+    {
+        name: "regen",
+        imgSrc: "../img/heart.png",
+        title: "Regeneration",
+        description: "Survive slightly longer",
+        baseCost: 5,
+        costMultiplier: 1.1
     }
 ];
 
