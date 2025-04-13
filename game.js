@@ -142,8 +142,8 @@ window.addEventListener("blur", () => {
 
 class Player extends Entity {
     constructor(x, y, parentElem, tool, shits) {
-        const boatNum = Number(localStorage.getItem("boat") ?? 0);
         const boats = [["img/noSwim.png", 1], ["img/lvl2boat.png", 3], ["img/jetski.png", 1]];
+        const boatNum = bound(Number(localStorage.getItem("boat") ?? 0), 0, boats.length - 1);
         super(x, y, 0.1 * (Number(localStorage.getItem("speed") ?? 0) + 1) + 0.05 * boatNum, boats[boatNum][0], parentElem, boats[boatNum][1]);
         this.boat = boatNum > 0;
         this.maxHealth = 100 + 5 * Number(localStorage.getItem("health") ?? 0);
