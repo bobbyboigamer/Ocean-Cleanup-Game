@@ -46,7 +46,7 @@ function bound(value, min, max) {
  * @returns Cartesian [x, y]
  */
 function polarToCartesian(radius, rotation) {
-    return [Math.cos(rotation) * radius, Math.sin(rotation) * radius];
+    return [Math.cos(theta) * r, Math.sin(theta) * r];
 }
 
 /**
@@ -76,8 +76,8 @@ function angleDiff(one, two) {
 
 // global variable spam cuz they dont pay me enough
 const tileSize = 50;
-const mapWidth = 20;
-const mapHeight = 20;
+const mapWidth = 10;
+const mapHeight = 10;
 
 class Entity {
     /**
@@ -89,8 +89,8 @@ class Entity {
      */
     constructor(x, y, health, speed, imgSrc, parentElem) {
         // move them comments into jsdoc
-        this.oldX = NaN; // x coordinate from previous frame, used to update image only when necessary
-        this.oldY = NaN; // old y coordinate
+        this.oldX = x; // x coordinate from previous frame, used to update image only when necessary
+        this.oldY = y; // old y coordinate
         this.oldRotation = 0; // old rotation
         this.x = x;
         this.y = y;
@@ -98,19 +98,16 @@ class Entity {
         this.health = health;
         this.speed = speed;
         this.image = createElem("img", {src: imgSrc, width: tileSize}, {position: "absolute", left: "0", top: "0"});
-        // methinks messing with the DOM in an requestAnimationFrame is slow or smth
         this.parentElem = parentElem;
         this.parentElem.appendChild(this.image);
-        this.rotationCenter = [50, 50]
-        this.imgHeight = this.image.offsetHeight;
     }
 
     update() {
-        this.x = bound(this.x, 0, mapWidth - 1);
-        this.y = bound(this.y, 0, mapHeight - 1);
+        this.x = bound(this.x, 0, mapWidth);
+        this.y = bound(this.y, 0, mapHeight);
         // angle threshold arbitrarily chosen
         if (this.oldX !== this.x || this.oldY !== this.y || angleDiff(this.rotation, this.oldRotation) > Math.PI / 16) {
-            this.image.style.transform = `translate(${this.x * tileSize - tileSize * this.rotationCenter[0] / 100}px, ${this.y * tileSize - this.imgHeight * this.rotationCenter[1] / 100}px) rotate(${this.rotation}rad)`;
+            this.image.style.transform = `translate(${this.x * tileSize}px, ${this.y * tileSize}px) rotate(${this.rotation}rad)`;
         }
     }
 
@@ -120,11 +117,9 @@ class Entity {
 }
 
 class Player extends Entity {
-    constructor(x, y, parentElem, tool, shits) {
-        super(x, y, 100, 0.1, "img/placeholder.png", parentElem);
-        this.shits = shits;
+    constructor(x, y, parentElem, tool) {
+        super(x, y, 100, 1, "img/placeholder.png", parentElem);
         this.tool = tool;
-        this.rotationCenter = [0, 0]
         // they dont pay me enough
         this.keys = new Map();
         addEventListener("keydown", event => {
@@ -133,14 +128,10 @@ class Player extends Entity {
         addEventListener("keyup", event => {
             this.keys.set(event.key, false);
         });
-        addEventListener("click", () => {
-            this.tool.grabShit(this.shits);
-        })
         // im sure throwing this shit in an event listener will have absolutely no problems with rotation change detection in update()
         this.parentElem.addEventListener("mousemove", event => {
             this.tool.rotation = Math.atan2(event.pageY / tileSize - this.y, event.pageX / tileSize - this.x);
         });
-        this.money = 0;
     }
 
     update() {
@@ -156,13 +147,14 @@ class Player extends Entity {
         if (this.keys.get("d")) {
             this.x += this.speed;
         }
-        if (this.x === mapWidth - 1 && this.y === mapHeight - 1) {
-            this.money += this.tool.depositShit();
-        }
-        this.tool.x = this.x + 0.5;
-        this.tool.y = this.y + 0.5;
+        this.tool.x = this.x;
+        this.tool.y = this.y;
         this.tool.update();
         super.update();
+    }
+
+    die() {
+        removeEventListener("keydown", this.handleKeyboard)
     }
 }
 
@@ -173,18 +165,15 @@ class Tool extends Entity {
         this.maxCapacity = -69;
     }
 
-    grabShit(shit) {
+    grabShit(worldShit) {
         throw new Error("override this you idiot")
     }
 
     depositShit() {
-        let value = 0;
         for (const shit of this.shit) {
-            value += shit.value;
             shit.oof();
         }
         this.shit = [];
-        return value;
     }
 }
 
@@ -192,85 +181,47 @@ class Net extends Tool {
     maxCapacity = 1
     constructor(parentElem, grabberLength, grabRadius) {
         super(parentElem);
-        this.image.src = "img/net.png";
-        this.imgHeight = this.image.offsetHeight
         this.grabberLength = grabberLength;
         this.grabRadius = grabRadius;
-        this.rotationCenter = [0, 18];
-        this.image.style.transformOrigin = `${this.rotationCenter[0]}% ${this.rotationCenter[1]}%`
+        this.image.style.transformOrigin = "100% 50%"
+        this.image.src = "img/net.png";
     }
 
-    grabShit(shits) {
+    grabShit(worldShit) {
         if (this.shit.length >= this.maxCapacity) {
             return;
         }
         const netPos = polarToCartesian(this.grabberLength, this.rotation);
         netPos[0] += this.x;
         netPos[1] += this.y;
-        for (const shit of shits) {
-            console.clear()
-            console.log(dist(netPos[0], netPos[1], shit.x, shit.y))
+        for (const shit of worldShit) {
             if (dist(netPos[0], netPos[1], shit.x, shit.y) <= this.grabRadius) {
                 this.shit.push(shit)
-                shit.oof();
+                shit.die();
                 return;
             }
         }
     }
 }
 
-class Shit extends Entity {
-    constructor(x, y, parentElem) {
-        super(x, y, 69, 0, "img/placeholder.png", parentElem);
-        this.value = 1;
-        this.update();
-        this.dead = false;
-    }
-
-    oof() {
-        this.dead = true;
-        super.oof();
-    }
-}
-
-class MovingShit extends Shit {
-    update() {
-        this.x += (Math.random() - 0.5) / 10;
-        this.y += (Math.random() - 0.5) / 10;
-        super.update();
-    }
-}
 
 addEventListener("DOMContentLoaded", () => {
     document.getElementById("playButton").addEventListener("click", () => {
         document.getElementById("playScreen").remove();
-        const gameDiv = createElem("div", {}, {position: "absolute", left: "0", top: "0", overflow: "hidden", display: "block", width: `${tileSize * mapWidth}px`, height: `${tileSize * mapHeight}px`});
+        const gameDiv = createElem("div", {}, {position: "absolute", left: "0", top: "0", overflow: "hidden", display: "block", width: "4000px", height: "4000px"});
         document.body.appendChild(gameDiv);
-        let shit = [];
-        for (let i = 0; i < Math.floor(Math.random() * 5) + 1; i++) {
-            shit.push(new Shit(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv));
-        }
-        const player = new Player(5, 5, gameDiv, new Net(gameDiv, 1, 1), shit);
-        let level = 0;
+        const idk = new Player(5, 5, gameDiv, new Net(gameDiv, 69, 420));
         
-        function gameLoop() {
-            player.update();
-            if (shit.length === 0) {
-                if (level === 0) {
-                    for (let i = 0; i < Math.floor(Math.random() * 5) + 1; i++) {
-                        shit.push(new MovingShit(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv));
-                    }
-                }
-                level++;
-            }
-            shit = shit.filter(thing => {
-                thing.update();
-                return !thing.dead
-            });
-            player.shits = shit;
-            window.scrollTo(player.x * tileSize - screen.availWidth / 2, player.y * tileSize - screen.availHeight / 2);
-            requestAnimationFrame(gameLoop);
+        function shit() {
+            idk.update();
+            requestAnimationFrame(shit);
         }
-        requestAnimationFrame(gameLoop);
+        requestAnimationFrame(shit);
+    });
+})
+
+addEventListener("DOMContentLoaded", () => {
+    document.getElementsByClassName("shop-items").addEventListener("click", () => {
+        
     });
 })

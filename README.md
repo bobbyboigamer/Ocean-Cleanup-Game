@@ -1,8 +1,8 @@
 # Ocean clean-up game
 
-This game is design for you to learn while having up cleaning up trash in a game. In the beginning you would have tutorial how to play the game and see the cool upgrade you can get. You would have to go back to your ship to put the trash either in the recycle, composter, or trash bin. 
+This game is designed for you to learn while having up cleaning up trash in a game. The beggining is a calemr version of the game to introduce people to the mechanics and the playstyle. You would have to go back to your ship to put the trash either in the recycle, composter, or trash bin. 
 
-This game consist of 3 level: 
+This game consist of 3 level and a boss level: 
 
     First level: You would clean up trash from the sea first where the monster won't attack and move slowly
 
@@ -12,21 +12,22 @@ This game consist of 3 level:
 
     Fourth level: Monsters and Oscar (From Sesame Street) attacks you 
 
-Upgrades:
+Upgrades (Opter's Shop): WIP : 
+update the shop screen upon purchasing, create variable corresponding to the upgrade tiers and change cost and stats dependent on said variables.
 There would be different type of tools you would use to capture the trash monster:
 
  Speed of the human player:
-    -increase by 10% every upgrade (starting bid at 15 coin, increase by 10%), you get max speed at 8 level
+    -increase by 10% every upgrade (starting cost at 15 coin, increase by 10%), you get max speed at 8 level
 
- Tools movement speed:
-    -increase by 5% every upgrade (starting bid at 10 coin, increase by 15%) 
+ Tools attack speed:
+    -increase by 5% every upgrade (starting cost at 10 coin, increase by 15%) 
 
  Armor:
-    -reduce damage by 15% (starting bid at 10 coin, money increase by 20%)
+    -reduce damage by 15% (starting bid at 10 cost, money increase by 20%)
 
  Health:
     -start up with 100 hp
-    -gain 5 hp per upgrade (starting bid at 15 coin, money increase by 15%)
+    -gain 5 hp per upgrade (starting bid at 15 cost, money increase by 15%)
 
  Tools upgrade:
     -Start with yourself picking up garbage
@@ -41,9 +42,9 @@ There would be different type of tools you would use to capture the trash monste
      -a cruise boat
 
  bots (help clean up):
- -basic
- -inter
- -advance
+ -Basic
+ -Intermediate
+ -Proficient
 
  Support:
  -a trash bin chain
@@ -51,5 +52,5 @@ There would be different type of tools you would use to capture the trash monste
  -a seabin
 
  Regeneration:
-    -regenerate your health by 2% per second
+    -Regenerate your health by x% per second.
 
