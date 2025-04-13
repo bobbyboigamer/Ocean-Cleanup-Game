@@ -143,7 +143,7 @@ class Player extends Entity {
         this.parentElem.addEventListener("mousemove", event => {
             this.tool.rotation = Math.atan2((event.pageY - topOffset) / tileSize - this.y - 0.5, event.pageX / tileSize - this.x - 0.5);
         });
-        this.money = 0;
+        this.money = Number(localStorage.getItem("money")) ?? 0;
     }
 
     update() {
@@ -168,6 +168,7 @@ class Player extends Entity {
         }
         if (dist(this.x, this.y, trashPos[0], trashPos[1]) < 2) {
             this.money += this.tool.depositShit();
+            localStorage.setItem("money", this.money);
             document.getElementById("trashCounter").textContent = `Trash: ${this.money}`;
         }
         this.tool.x = this.x + 0.5;
@@ -355,6 +356,7 @@ const trashPos = [0, 0];
 const trashElem = createElem("img", {src: "img/trash.png", width: tileSize, height: tileSize}, {position: "absolute", left: `${trashPos[0] * tileSize}px`, top: `${trashPos[1] * tileSize}px`});
 
 addEventListener("DOMContentLoaded", () => {
+    document.getElementById("trashCounter").textContent = `Trash: ${localStorage.getItem("money") ?? 0}`
     document.getElementById("playButton").addEventListener("click", () => {
         document.body.style.backgroundImage = "url('img/background.png')";
         document.getElementById("playScreen").style.display = "none";
@@ -393,6 +395,7 @@ addEventListener("DOMContentLoaded", () => {
             window.scrollTo(player.x * tileSize - screen.availWidth / 2, player.y * tileSize - screen.availHeight / 2);
             if (player.health <= 0) {
                 alert("you died score 0");
+                localStorage.setItem("money", 0);
                 gameDiv.remove();
                 document.getElementById("playScreen").style.display = "flex";
             } else {

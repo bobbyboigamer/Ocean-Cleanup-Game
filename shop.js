@@ -1,0 +1,1 @@
+document.getElementById("trashCounter").textContent = `Trash: ${localStorage.getItem("money") ?? 0}`
