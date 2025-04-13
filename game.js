@@ -72,13 +72,6 @@ function angleDiff(one, two) {
     return mod((one - two) + Math.PI, 2 * Math.PI) - Math.PI;
 }
 
-
-
-// global variable spam cuz they dont pay me enough
-const tileSize = 50;
-const mapWidth = 20;
-const mapHeight = 20;
-
 class Entity {
     /**
      * @param x Entity topleft Cartesian X coordinate in tiles
@@ -101,7 +94,7 @@ class Entity {
         // methinks messing with the DOM in an requestAnimationFrame is slow or smth
         this.parentElem = parentElem;
         this.parentElem.appendChild(this.image);
-        this.rotationCenter = [50, 50]
+        this.rotationCenter = [0, 0]
         this.imgHeight = this.image.offsetHeight;
     }
 
@@ -124,7 +117,6 @@ class Player extends Entity {
         super(x, y, 100, 0.1, "img/placeholder.png", parentElem);
         this.shits = shits;
         this.tool = tool;
-        this.rotationCenter = [0, 0]
         // they dont pay me enough
         this.keys = new Map();
         addEventListener("keydown", event => {
@@ -138,7 +130,7 @@ class Player extends Entity {
         })
         // im sure throwing this shit in an event listener will have absolutely no problems with rotation change detection in update()
         this.parentElem.addEventListener("mousemove", event => {
-            this.tool.rotation = Math.atan2(event.pageY / tileSize - this.y, event.pageX / tileSize - this.x);
+            this.tool.rotation = Math.atan2((event.pageY - topOffset) / tileSize - this.y - 0.5, event.pageX / tileSize - this.x - 0.5);
         });
         this.money = 0;
     }
@@ -156,8 +148,9 @@ class Player extends Entity {
         if (this.keys.get("d")) {
             this.x += this.speed;
         }
-        if (this.x === mapWidth - 1 && this.y === mapHeight - 1) {
+        if (dist(this.x, this.y, trashPos[0], trashPos[1]) < 2) {
             this.money += this.tool.depositShit();
+            document.getElementById("trashCounter").textContent = `Trash: ${this.money}`;
         }
         this.tool.x = this.x + 0.5;
         this.tool.y = this.y + 0.5;
@@ -184,7 +177,15 @@ class Tool extends Entity {
             shit.oof();
         }
         this.shit = [];
+        trashElem.src = "img/trash.png";
         return value;
+    }
+
+    update() {
+        if (this.shit.length === this.maxCapacity && trashElem.src !== "img/trashActive.png") {
+            trashElem.src = "img/trashActive.png";
+        }
+        super.update();
     }
 }
 
@@ -208,8 +209,6 @@ class Net extends Tool {
         netPos[0] += this.x;
         netPos[1] += this.y;
         for (const shit of shits) {
-            console.clear()
-            console.log(dist(netPos[0], netPos[1], shit.x, shit.y))
             if (dist(netPos[0], netPos[1], shit.x, shit.y) <= this.grabRadius) {
                 this.shit.push(shit)
                 shit.oof();
@@ -241,11 +240,25 @@ class MovingShit extends Shit {
     }
 }
 
+
+// global variable spam cuz they dont pay me enough
+const tileSize = 50;
+const topOffset = 100;
+const mapWidth = 20;
+const mapHeight = 20;
+const trashPos = [0, 0];
+
+const trashElem = createElem("img", {src: "img/trash.png", width: tileSize, height: tileSize}, {position: "absolute", left: `${trashPos[0] * tileSize}px`, top: `${trashPos[1] * tileSize}px`});
+
 addEventListener("DOMContentLoaded", () => {
     document.getElementById("playButton").addEventListener("click", () => {
+        document.body.style.backgroundImage = "url('img/background.png')";
         document.getElementById("playScreen").remove();
-        const gameDiv = createElem("div", {}, {position: "absolute", left: "0", top: "0", overflow: "hidden", display: "block", width: `${tileSize * mapWidth}px`, height: `${tileSize * mapHeight}px`});
+        const gameDiv = createElem("div", {}, {position: "absolute", left: "0", top: `${topOffset}px`, overflow: "hidden", display: "block", width: `${tileSize * mapWidth}px`, height: `${tileSize * mapHeight}px`, userSelect: "none"});
+        gameDiv.addEventListener("dragstart", event => event.preventDefault());
+        gameDiv.appendChild(trashElem);
         document.body.appendChild(gameDiv);
+
         let shit = [];
         for (let i = 0; i < Math.floor(Math.random() * 5) + 1; i++) {
             shit.push(new Shit(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv));
