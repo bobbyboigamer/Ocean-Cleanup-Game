@@ -227,11 +227,25 @@ class Player extends Entity {
             ["Where does a Plastic milk jug go?", "recycle"],
             ["Where does a Eggshells go?", "compost"],
         ];
-        const question = questions[Math.floor(Math.random() * questions.length)];
+        const question = questions[Math.floor(Math.random() * questions.length)]
+        
+        const fact = [
+            "Community Gardens - People grow their own food together.",
+            "Bike Share - Rent bikes to reduce car use.",
+            "Upcycling Workshops - Turn old stuff into new things.",
+            "Reusable Bags - Use bags that can be reused instead of plastic.",
+            "Zero-Waste Markets - Shops with no packaging or waste.",
+            "Solar Streetlights - Lights powered by the sun.",
+            "Repair Cafes - Fix things instead of throwing them out.",
+            "Car-Free Days - Days when no cars are allowed in certain areas.",
+            "Rainwater Collection - Save rainwater for use later.",
+            "Tree Planting - Plant trees to help the environment.",
+            "Green Buildings - Buildings designed to save energy."
+        ];
 
         const userAnswer = prompt(question[0] + " (compost, recycle, trash)");
         if (userAnswer !== null && prefixDLev(userAnswer, question[1]) < 3) {
-            alert("Correct! You've earned XP Environmental Sustainability");
+            alert("Correct! You get your trash");
             for (const key of this.keys.keys()) {
                 this.keys.set(key, false);
             }
@@ -239,6 +253,7 @@ class Player extends Entity {
             alert(`Incorrect answer. Answer was ${question[1]}. Try again!`);
             this.promptQuestion();
         }
+        alert(fact[Math.floor(Math.random() * fact.length)])
     }
 }
 
