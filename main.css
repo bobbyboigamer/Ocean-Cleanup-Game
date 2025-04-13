@@ -1,0 +1,97 @@
+#playScreen {
+    width: 100vw; 
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+#title {
+    width: 350px;
+    height: 50px;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+button {
+    background: none;
+    border: none;                 
+    text-decoration: none;
+    outline: none;
+    cursor: pointer;
+    margin-bottom: 5px;
+    background-color: black;
+    color: white;
+}
+
+#playButton {
+    width: 120px;
+    height: 40px;
+}
+
+#quitButton {
+    width: 120px;
+    height: 40px;
+}
+
+#gameEmblem {
+    width: 100px;
+    height: 100px;
+    background-color: skyblue;
+    text-decoration: none;
+}
+
+
+/* Sprites */
+
+#playerSprite{
+    width: 50px;
+    height: 50px;
+    /* color only for test, please edit the "playerSprite after test,
+implementing designed player sprite */
+    background-color: red;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+}
+#fishSprite{
+    width: 20px;
+    height: 10px;
+    /* color only for test, please edit the "fishSprite" after test,
+implementing designed fish sprite */
+    background-color: yellow;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+}
+#trashPileCurrencyOne{
+    width: 20px;
+    height: 10px;
+    /* color only for test, please edit the "trashPileCurrency" 
+after test, implementing designed trash pile currency */
+    background-color: darkgreen;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+}
+#trashPileCurrencyTwo{
+    width: 20px;
+    height: 10px;
+    /* color only for test, please edit the "trashPileCurrency" 
+after test, implementing designed trash pile currency */
+    background-color: green;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+}
+#trashPileCurrencyThree{
+    width: 20px;
+    height: 10px;
+    /* color only for test, please edit the "trashPileCurrency" 
+after test, implementing designed trash pile currency */
+    background-color: lightgreen;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+}

@@ -1,9 +1,83 @@
-import {createElem, bound, polarToCartesian, dist} from "./randomStuff.js";
+// will not separate files for now because no bundler + CORS prevents files from being split into modules
+
+/**
+ * Modulus. Like remainder but also for negative numbers.
+ * mod(420, 69) = 6; mod(-69, 420) = 351;
+ * @param num Dividend
+ * @param divisor Divisor
+ * @returns Mod
+ */
+function mod(num, divisor) {
+    return ((num % divisor) + divisor) % divisor;
+}
+
+/**
+ * Create an element but stupid
+ * @param type Type of element
+ * @param properties Element properties set using regular object properties
+ * @param children List of element's childrens, added with appendChild
+ * @return Element
+ */
+function createElem(type, properties = {}, styles = {}, ...children) {
+    const elem = document.createElement(type);
+    Object.assign(elem, properties);
+    Object.assign(elem.style, styles);
+    for (const child of children) {
+        elem.appendChild(child);
+    }
+    return elem;
+}
+
+/**
+ * Bound a number between min and max
+ * @value value to bound
+ * @min minimum
+ * @max maximum
+ * @return bounded value
+ */
+function bound(value, min, max) {
+    return Math.max(Math.min(value, max), min);
+}
+
+/**
+ * Polar coordinates to cartesian coordinates
+ * @param r Radius
+ * @param theta Angle in radians, including coterminal
+ * @returns Cartesian [x, y]
+ */
+function polarToCartesian(radius, rotation) {
+    return [Math.cos(theta) * r, Math.sin(theta) * r];
+}
+
+/**
+ * Distance between two cartesian points using pythagorean theorems.
+ * @param x1 X coordinate of first point
+ * @param y1 Y coordinate of first point
+ * @param x2 X coordinate of second point
+ * @param y2 Y coordinate of second point
+ * @returns Distance
+ */
+function dist(x1, y1, x2, y2) {
+    return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+}
+
+/**
+ * Angle between two radian points. May handle negatives. Will not handle coterminal angles.
+ * @param one First radian angle
+ * @param two Second radian angle
+ * @returns Possibly negative difference in radians
+ */
+function angleDiff(one, two) {
+    // dont ask me what this is
+    return mod((one - two) + Math.PI, 2 * Math.PI) - Math.PI;
+}
+
+
 
 // global variable spam cuz they dont pay me enough
-export const tileSize = 50;
-export const mapWidth = 10;
-export const mapHeight = 10;
+const tileSize = 50;
+const mapWidth = 10;
+const mapHeight = 10;
 
 class Entity {
     /**
@@ -42,16 +116,16 @@ class Entity {
     }
 }
 
-export class Player extends Entity {
-    constructor(tool) {
+class Player extends Entity {
+    constructor(x, y, parentElem, tool) {
+        super(x, y, 100, 1, "img/placeholder.png", parentElem);
         this.tool = tool;
-        super();
         // they dont pay me enough
-        keys = new Map();
-        this.parentElem.addEventListener("keydown", event => {
+        this.keys = new Map();
+        addEventListener("keydown", event => {
             this.keys.set(event.key, true)
         });
-        this.parentElem.addEventListener("keyup", event => {
+        addEventListener("keyup", event => {
             this.keys.set(event.key, false);
         });
         // im sure throwing this shit in an event listener will have absolutely no problems with rotation change detection in update()
@@ -71,8 +145,11 @@ export class Player extends Entity {
             this.x -= this.speed;
         }
         if (this.keys.get("d")) {
-            this.y += this.speed;
+            this.x += this.speed;
         }
+        this.tool.x = this.x;
+        this.tool.y = this.y;
+        this.tool.update();
         super.update();
     }
 
@@ -82,8 +159,8 @@ export class Player extends Entity {
 }
 
 class Tool extends Entity {
-    constructor() {
-        super();
+    constructor(parentElem) {
+        super(-69, -420, 1, 1, "img/placeholder.png", parentElem);
         this.shit = [];
         this.maxCapacity = -69;
     }
@@ -100,11 +177,14 @@ class Tool extends Entity {
     }
 }
 
-export class Net extends Tool {
+class Net extends Tool {
     maxCapacity = 1
-    constructor(grabberLength, grabRadius) {
+    constructor(parentElem, grabberLength, grabRadius) {
+        super(parentElem);
         this.grabberLength = grabberLength;
         this.grabRadius = grabRadius;
+        this.image.style.transformOrigin = "100% 50%"
+        this.image.src = "img/net.png";
     }
 
     grabShit(worldShit) {
@@ -123,3 +203,19 @@ export class Net extends Tool {
         }
     }
 }
+
+
+addEventListener("DOMContentLoaded", () => {
+    document.getElementById("playButton").addEventListener("click", () => {
+        document.getElementById("playScreen").remove();
+        const gameDiv = createElem("div", {}, {position: "absolute", left: "0", top: "0", overflow: "hidden", display: "block", width: "4000px", height: "4000px"});
+        document.body.appendChild(gameDiv);
+        const idk = new Player(5, 5, gameDiv, new Net(gameDiv, 69, 420));
+        
+        function shit() {
+            idk.update();
+            requestAnimationFrame(shit);
+        }
+        requestAnimationFrame(shit);
+    });
+})
