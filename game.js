@@ -46,7 +46,7 @@ function bound(value, min, max) {
  * @returns Cartesian [x, y]
  */
 function polarToCartesian(radius, rotation) {
-    return [Math.cos(theta) * r, Math.sin(theta) * r];
+    return [Math.cos(rotation) * radius, Math.sin(rotation) * radius];
 }
 
 /**
@@ -89,8 +89,8 @@ class Entity {
      */
     constructor(x, y, health, speed, imgSrc, parentElem) {
         // move them comments into jsdoc
-        this.oldX = x; // x coordinate from previous frame, used to update image only when necessary
-        this.oldY = y; // old y coordinate
+        this.oldX = NaN; // x coordinate from previous frame, used to update image only when necessary
+        this.oldY = NaN; // old y coordinate
         this.oldRotation = 0; // old rotation
         this.x = x;
         this.y = y;
@@ -120,8 +120,8 @@ class Entity {
 }
 
 class Player extends Entity {
-    constructor(x, y, parentElem, tool) {
-        super(x, y, 100, 1, "img/placeholder.png", parentElem);
+    constructor(x, y, parentElem, tool, shit) {
+        super(x, y, 100, 0.1, "img/placeholder.png", parentElem);
         this.tool = tool;
         this.rotationCenter = [0, 0]
         // they dont pay me enough
@@ -132,10 +132,14 @@ class Player extends Entity {
         addEventListener("keyup", event => {
             this.keys.set(event.key, false);
         });
+        addEventListener("click", () => {
+            this.tool.grabShit(shit);
+        })
         // im sure throwing this shit in an event listener will have absolutely no problems with rotation change detection in update()
         this.parentElem.addEventListener("mousemove", event => {
             this.tool.rotation = Math.atan2(event.pageY / tileSize - this.y, event.pageX / tileSize - this.x);
         });
+        this.money = 0;
     }
 
     update() {
@@ -151,14 +155,13 @@ class Player extends Entity {
         if (this.keys.get("d")) {
             this.x += this.speed;
         }
+        if (this.x === mapWidth - 1 && this.y === mapHeight - 1) {
+            this.money += this.tool.depositShit();
+        }
         this.tool.x = this.x + 0.5;
         this.tool.y = this.y + 0.5;
         this.tool.update();
         super.update();
-    }
-
-    die() {
-        removeEventListener("keydown", this.handleKeyboard)
     }
 }
 
@@ -169,15 +172,18 @@ class Tool extends Entity {
         this.maxCapacity = -69;
     }
 
-    grabShit(worldShit) {
+    grabShit(shit) {
         throw new Error("override this you idiot")
     }
 
     depositShit() {
+        let value = 0;
         for (const shit of this.shit) {
+            value += shit.value;
             shit.oof();
         }
         this.shit = [];
+        return value;
     }
 }
 
@@ -193,35 +199,43 @@ class Net extends Tool {
         this.image.style.transformOrigin = `${this.rotationCenter[0]}% ${this.rotationCenter[1]}%`
     }
 
-    grabShit(worldShit) {
+    grabShit(shits) {
         if (this.shit.length >= this.maxCapacity) {
             return;
         }
         const netPos = polarToCartesian(this.grabberLength, this.rotation);
         netPos[0] += this.x;
         netPos[1] += this.y;
-        for (const shit of worldShit) {
+        for (const shit of shits) {
             if (dist(netPos[0], netPos[1], shit.x, shit.y) <= this.grabRadius) {
                 this.shit.push(shit)
-                shit.die();
+                shit.oof();
                 return;
             }
         }
     }
 }
 
+class Shit extends Entity {
+    constructor(x, y, parentElem) {
+        super(x, y, 69, 0, "img/placeholder.png", parentElem);
+        this.value = 1;
+        this.update();
+    }
+}
 
 addEventListener("DOMContentLoaded", () => {
     document.getElementById("playButton").addEventListener("click", () => {
         document.getElementById("playScreen").remove();
         const gameDiv = createElem("div", {}, {position: "absolute", left: "0", top: "0", overflow: "hidden", display: "block", width: `${tileSize * mapWidth}px`, height: `${tileSize * mapHeight}px`});
         document.body.appendChild(gameDiv);
-        const idk = new Player(5, 5, gameDiv, new Net(gameDiv, 69, 420));
+        const shit = [new Shit(7, 7, gameDiv), new Shit(3, 3, gameDiv)]
+        const idk = new Player(5, 5, gameDiv, new Net(gameDiv, 1, 1), shit);
         
-        function shit() {
+        function gameLoop() {
             idk.update();
-            requestAnimationFrame(shit);
+            requestAnimationFrame(gameLoop);
         }
-        requestAnimationFrame(shit);
+        requestAnimationFrame(gameLoop);
     });
 })
