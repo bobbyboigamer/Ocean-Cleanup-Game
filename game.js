@@ -287,17 +287,23 @@ class Net extends Tool {
 
 class HarpoonGun extends Tool {
     maxCapacity = 1
-    constructor(projectiles, parentElem) {
+    constructor(fireCooldownMs, projectiles, parentElem) {
         super(parentElem);
         this.projectiles = projectiles;
         this.image.src = "../img/harpoon.png";
         this.imgHeight = this.image.offsetHeight;
+        this.fireCooldownMs = fireCooldownMs;
+        this.fire = true;
     }
 
     grabShit(shits) {
-        if (this.shit.length >= this.maxCapacity) {
+        if (this.shit.length >= this.maxCapacity || !this.fire) {
             return;
         }
+        this.fire = false;
+        setTimeout(() => {
+            this.fire = true;
+        }, this.fireCooldownMs);
         this.projectiles.push(new Harpoon(this.x, this.y, polarToCartesian(1, this.rotation), 0.1, shits, this.parentElem, shit => {
             this.shit.push(shit);
             shit.oof();
@@ -483,7 +489,7 @@ addEventListener("DOMContentLoaded", () => {
 
         let shit = [];
         const projectiles = [];
-        const player = new Player(5, 5, gameDiv, localStorage.getItem("harpoon") ? new HarpoonGun(projectiles, gameDiv) : new Net(gameDiv, 1, 1), shit);
+        const player = new Player(5, 5, gameDiv, localStorage.getItem("harpoon") ? new HarpoonGun(1000, projectiles, gameDiv) : new Net(gameDiv, 1, 1), shit);
         for (let i = 0; i < Math.floor(Math.random() * 5) + 5; i++) {
             shit.push(new MovingShit(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash1.png", "img/trash3.png"]));
 
