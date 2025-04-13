@@ -120,6 +120,26 @@ class Entity {
     }
 }
 
+const keys = new Map();
+// they dont pay me enough
+addEventListener("keydown", event => {
+    keys.set(event.key.toLowerCase(), true)
+});
+addEventListener("keyup", event => {
+    keys.set(event.key.toLowerCase(), false);
+});
+function idkAlert(message) {
+    for (const key of keys.keys()) {
+        keys.set(key, false);
+    }
+    alert(message);
+}
+window.addEventListener("blur", () => {
+    for (const key of keys.keys()) {
+        keys.set(key, false);
+    }
+});
+
 class Player extends Entity {
     constructor(x, y, parentElem, tool, shits) {
         const boatPresent = localStorage.getItem("boat") !== null;
@@ -132,14 +152,6 @@ class Player extends Entity {
         this.parentElem.appendChild(this.healthBar);
         this.shits = shits;
         this.tool = tool;
-        // they dont pay me enough
-        this.keys = new Map();
-        addEventListener("keydown", event => {
-            this.keys.set(event.key.toLowerCase(), true)
-        });
-        addEventListener("keyup", event => {
-            this.keys.set(event.key.toLowerCase(), false);
-        });
         parentElem.addEventListener("click", () => {
             this.tool.grabShit(this.shits);
         })
@@ -166,16 +178,16 @@ class Player extends Entity {
         if (this.imgHeight === 0) {
             this.imgHeight = this.image.offsetHeight;
         }
-        if (this.keys.get("w")) {
+        if (keys.get("w")) {
             this.y -= this.speed;
         }
-        if (this.keys.get("s")) {
+        if (keys.get("s")) {
             this.y += this.speed;
         }
-        if (this.keys.get("a")) {
+        if (keys.get("a")) {
             this.x -= this.speed;
         }
-        if (this.keys.get("d")) {
+        if (keys.get("d")) {
             this.x += this.speed;
         }
         if ((this.x !== this.oldX || this.y !== this.oldY) && !isNaN(this.oldX) && !isNaN(this.oldY)) {
@@ -245,12 +257,10 @@ class Player extends Entity {
 
         const userAnswer = prompt(question[0] + " (compost, recycle, trash)");
         if (userAnswer !== null && prefixDLev(userAnswer, question[1]) < 3) {
-            alert("Correct! You get your trash");
-            for (const key of this.keys.keys()) {
-                this.keys.set(key, false);
-            }
+            idkAlert("Correct! You get your trash");
+            idkAlert(fact[Math.floor(Math.random() * fact.length)])
         } else {
-            alert(`Incorrect answer. Answer was ${question[1]}. Try again!`);
+            idkAlert(`Incorrect answer. Answer was ${question[1]}. Try again!`);
             this.promptQuestion();
         }
         alert(fact[Math.floor(Math.random() * fact.length)])
@@ -300,7 +310,7 @@ class Net extends Tool {
 
     grabShit(shits) {
         if (this.shit.length >= this.maxCapacity) {
-            alert("you is full bruh");
+            idkAlert("you is full bruh");
             return;
         }
         const netPos = polarToCartesian(this.grabberLength, this.rotation);
@@ -331,7 +341,7 @@ class HarpoonGun extends Tool {
 
     grabShit(shits) {
         if (this.shit.length >= this.maxCapacity || !this.fire) {
-            alert("you is full bruh");
+            idkAlert("you is full bruh");
 
             return;
         }
@@ -670,6 +680,7 @@ addEventListener("DOMContentLoaded", () => {
         function gameLoop() {
             player.update();
             if (shit.length === 0) {
+                idkAlert("u is on level " + (level + 1));
                 if (level === 0) {
                     for (let i = 0; i < Math.floor(Math.random() * 5) + 5; i++) {
                         shit.push(new AttackingShit(0.05, 0, player, projectiles, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash2.png", "img/trash4.png", "img/trash6.png"], 2));
@@ -703,12 +714,12 @@ addEventListener("DOMContentLoaded", () => {
                 const oof = createElem("audio", {src: "noise/oof.mp3"});
                 oof.play();
                 oof.remove();
-                alert("you died score 0");
+                idkAlert("you died score 0");
                 localStorage.clear();
                 cleanUp();
             } else if (level === 4) {
                 cleanUp();
-                alert("you win")
+                idkAlert("you win")
             } else {
                 requestAnimationFrame(gameLoop);
             }
