@@ -243,9 +243,29 @@ class Shit extends Entity {
 }
 
 class MovingShit extends Shit {
+    constructor(...args) {
+        super(...args);
+        this.driftDirection = ["up", "down", "left", "right"][Math.floor(Math.random() * 4)];
+        this.driftCounter = 0;
+        this.maxDriftFrames = Math.floor(Math.random() * 300);
+    }
+
     update() {
-        this.x += (Math.random() - 0.5) / 10;
-        this.y += (Math.random() - 0.5) / 10;
+        if (this.driftDirection === "up") {
+            this.y -= this.speed;
+        } else if (this.driftDirection === "down") {
+            this.y += this.speed;
+        } else if (this.driftDirection === "left") {
+            this.x -= this.speed;
+        } else if (this.driftDirection === "right") {
+            this.x += this.speed;
+        }
+        this.driftCounter++;
+        if (this.driftCounter >= this.maxDriftFrames) {
+            this.driftCounter = 0;
+            this.driftDirection = ["up", "down", "left", "right"][Math.floor(Math.random() * 4)];
+            this.maxDriftFrames = Math.floor(Math.random() * 300);
+        }
         super.update();
     }
 }
@@ -270,8 +290,8 @@ addEventListener("DOMContentLoaded", () => {
         document.body.appendChild(gameDiv);
 
         let shit = [];
-        for (let i = 0; i < Math.floor(Math.random() * 5) + 1; i++) {
-            shit.push(new Shit(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv));
+        for (let i = 0; i < Math.floor(Math.random() * 5) + 5; i++) {
+            shit.push(new MovingShit(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash1.png", "img/trash3.png"]));
         }
         const player = new Player(5, 5, gameDiv, new Net(gameDiv, 1, 1), shit);
         let level = 0;
@@ -281,7 +301,7 @@ addEventListener("DOMContentLoaded", () => {
             if (shit.length === 0) {
                 if (level === 0) {
                     for (let i = 0; i < Math.floor(Math.random() * 5) + 5; i++) {
-                        shit.push(new MovingShit(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv));
+                        shit.push(new MovingShit(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash2.png", "img/trash3.png"]));
                     }
                 }
                 level++;
