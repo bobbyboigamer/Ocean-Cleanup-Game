@@ -14,6 +14,7 @@ function createElem(type, properties = {}, styles = {}, ...children) {
 const items = [
     {
         name: "harpoon",
+        imgSrc: "../img/harpoonIcon.png",
         title: "Tool Upgrade",
         description: "Enhance your garbage cleanup",
         baseCost: 10,
@@ -56,6 +57,14 @@ const items = [
         description: "Increase your healthpool!",
         baseCost: 20,
         costMultiplier: 1.5,
+    },
+    {
+        name: "capacity",
+        imgSrc: "../img/placeholder.png",
+        title: "Capacity Upgrade",
+        description: "Increase capacity by 1!",
+        baseCost: 15,
+        costMultiplier: 1
     }
 ];
 
@@ -81,6 +90,7 @@ for (const item of items) {
         localStorage.setItem(item.name, level);
         money -= cost;
         localStorage.setItem("money", money);
+        document.getElementById("trashCounter").textContent = `Trash: ${money}`;
         document.querySelector(`#${item.name} .price`).textContent = `Cost: ${Math.round(cost * item.costMultiplier)}`
     })
     shopItem.classList.add("shopItem");

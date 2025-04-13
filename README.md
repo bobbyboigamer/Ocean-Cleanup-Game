@@ -41,15 +41,10 @@ There would be different type of tools you would use to capture the trash monste
      -a jet boat
      -a cruise boat
 
- bots (help clean up):
- -Basic
- -Intermediate
- -Proficient
-
  Support:
- -a trash bin chain
- -a big net
- -a seabin
+   -a trash bin chain
+   -a big net
+   -a seabin
 
  Regeneration:
     -Regenerate your health by x% per second.
