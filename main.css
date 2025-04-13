@@ -20,21 +20,21 @@ body {
     height: 200px;
     font-size: 68px;
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 10px;
     text-shadow: rgb(2, 57, 255) 1px 0 5px;
 }
 
 button {
     background: none;
-    border: none;                 
+    border: none;
     text-decoration: none;
     outline: none;
     cursor: pointer;
     margin: 0px 5px 0px;
-    background-color: #2b3e51;
+    background-color: #0a1728;
     color: white;
     font-size: 25px;
-    border-radius: 10px;
+    border-radius: 5px;
 }
 
 #playButton {
@@ -77,7 +77,7 @@ implementing designed wooden boat sprite */
     top: 50%;
     left: 50%;
 }
-#PirateShipSprite{
+#pirateShipSprite{
     width: 50px;
     height: 30px;
     /* color only for test, please edit the "pirateShipSprite" after test,
