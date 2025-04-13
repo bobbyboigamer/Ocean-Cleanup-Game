@@ -76,8 +76,8 @@ function angleDiff(one, two) {
 
 // global variable spam cuz they dont pay me enough
 const tileSize = 50;
-const mapWidth = 10;
-const mapHeight = 10;
+const mapWidth = 20;
+const mapHeight = 20;
 
 class Entity {
     /**
@@ -120,8 +120,9 @@ class Entity {
 }
 
 class Player extends Entity {
-    constructor(x, y, parentElem, tool, shit) {
+    constructor(x, y, parentElem, tool, shits) {
         super(x, y, 100, 0.1, "img/placeholder.png", parentElem);
+        this.shits = shits;
         this.tool = tool;
         this.rotationCenter = [0, 0]
         // they dont pay me enough
@@ -133,7 +134,7 @@ class Player extends Entity {
             this.keys.set(event.key, false);
         });
         addEventListener("click", () => {
-            this.tool.grabShit(shit);
+            this.tool.grabShit(this.shits);
         })
         // im sure throwing this shit in an event listener will have absolutely no problems with rotation change detection in update()
         this.parentElem.addEventListener("mousemove", event => {
@@ -207,6 +208,8 @@ class Net extends Tool {
         netPos[0] += this.x;
         netPos[1] += this.y;
         for (const shit of shits) {
+            console.clear()
+            console.log(dist(netPos[0], netPos[1], shit.x, shit.y))
             if (dist(netPos[0], netPos[1], shit.x, shit.y) <= this.grabRadius) {
                 this.shit.push(shit)
                 shit.oof();
@@ -221,6 +224,20 @@ class Shit extends Entity {
         super(x, y, 69, 0, "img/placeholder.png", parentElem);
         this.value = 1;
         this.update();
+        this.dead = false;
+    }
+
+    oof() {
+        this.dead = true;
+        super.oof();
+    }
+}
+
+class MovingShit extends Shit {
+    update() {
+        this.x += (Math.random() - 0.5) / 10;
+        this.y += (Math.random() - 0.5) / 10;
+        super.update();
     }
 }
 
@@ -229,11 +246,29 @@ addEventListener("DOMContentLoaded", () => {
         document.getElementById("playScreen").remove();
         const gameDiv = createElem("div", {}, {position: "absolute", left: "0", top: "0", overflow: "hidden", display: "block", width: `${tileSize * mapWidth}px`, height: `${tileSize * mapHeight}px`});
         document.body.appendChild(gameDiv);
-        const shit = [new Shit(7, 7, gameDiv), new Shit(3, 3, gameDiv)]
-        const idk = new Player(5, 5, gameDiv, new Net(gameDiv, 1, 1), shit);
+        let shit = [];
+        for (let i = 0; i < Math.floor(Math.random() * 5) + 1; i++) {
+            shit.push(new Shit(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv));
+        }
+        const player = new Player(5, 5, gameDiv, new Net(gameDiv, 1, 1), shit);
+        let level = 0;
         
         function gameLoop() {
-            idk.update();
+            player.update();
+            if (shit.length === 0) {
+                if (level === 0) {
+                    for (let i = 0; i < Math.floor(Math.random() * 5) + 1; i++) {
+                        shit.push(new MovingShit(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv));
+                    }
+                }
+                level++;
+            }
+            shit = shit.filter(thing => {
+                thing.update();
+                return !thing.dead
+            });
+            player.shits = shit;
+            window.scrollTo(player.x * tileSize - screen.availWidth / 2, player.y * tileSize - screen.availHeight / 2);
             requestAnimationFrame(gameLoop);
         }
         requestAnimationFrame(gameLoop);
