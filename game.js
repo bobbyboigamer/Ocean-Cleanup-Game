@@ -356,7 +356,11 @@ const trashPos = [0, 0];
 const trashElem = createElem("img", {src: "img/trash.png", width: tileSize, height: tileSize}, {position: "absolute", left: `${trashPos[0] * tileSize}px`, top: `${trashPos[1] * tileSize}px`});
 
 addEventListener("DOMContentLoaded", () => {
-    document.getElementById("trashCounter").textContent = `Trash: ${localStorage.getItem("money") ?? 0}`
+    document.getElementById("trashCounter").textContent = `Trash: ${localStorage.getItem("money") ?? 0}`;
+    document.getElementById("resetBtn").addEventListener("click", () => {
+        localStorage.clear();
+        window.location.reload();
+    })
     document.getElementById("playButton").addEventListener("click", () => {
         document.body.style.backgroundImage = "url('img/background.png')";
         document.getElementById("playScreen").style.display = "none";
