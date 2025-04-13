@@ -400,10 +400,11 @@ class TrashProjectile extends Entity {
             }
         }
         super(x, y, speed, imgSrc, parentElem);
-        this.victim = victim;
+        this.victims = victims;
         this.damage = damage;
         this.moveVector = scaleVector(moveVector[0], moveVector[1], this.speed);
         this.dead = false;
+        this.onAttack = onAttack;
     }
 
     update() {
@@ -412,13 +413,16 @@ class TrashProjectile extends Entity {
         }
         this.x += this.moveVector[0];
         this.y += this.moveVector[1];
-        if (dist(this.x, this.y, this.victim.x, this.victim.y) < 1) {
-            this.victim.health -= this.damage;
+        if (this.x < 0 || this.y < 0 || this.x >= mapWidth - 1 || this.y >= mapWidth - 1) {
             this.oof();
             return;
-        } else if (this.x < 0 || this.y < 0 || this.x >= mapWidth - 1 || this.y >= mapWidth - 1) {
-            this.oof();
-            return;
+        }
+        for (const victim of this.victims) {
+            if (dist(this.x, this.y, victim.x, victim.y) < 1) {
+                this.onAttack(victim);
+                this.oof();
+                return;
+            }
         }
         super.update();
     }
@@ -430,18 +434,24 @@ class TrashProjectile extends Entity {
 }
 
 class AttackingShit extends Shit {
-    constructor(victim, projectiles, ...args) {
-        super(...args);
+    constructor(victim, projectiles, x, y, parentElem, trashImgs, value = 1) {
+        super(x, y, 0.02, parentElem, trashImgs, value);
         this.victim = victim;
         this.attackCooldown = Math.floor(Math.random() * 300) + 300;
         this.projectiles = projectiles;
     }
 
     update() {
+        if (dist(this.x, this.y, this.victim.x, this.victim.y) < 3) {
+            const moveVector = scaleVector(this.x - this.victim.x, this.y - this.victim.y, this.speed);
+            this.x += moveVector[0];
+            this.y += moveVector[1];
+        }
+
         this.attackCooldown--;
         if (this.attackCooldown <= 0) {
             this.attackCooldown = Math.floor(Math.random() * 300) + 300;
-            this.projectiles.push(new Projectile(this.x, this.y, [this.victim.x - this.x, this.victim.y - this.y], 0.1, this.victim, 10, this.parentElem));
+            this.projectiles.push(new TrashProjectile(this.x, this.y, [this.victim.x - this.x, this.victim.y - this.y], 0.1, [this.victim], 10, this.parentElem));
         }
         super.update();
     }
@@ -478,17 +488,15 @@ addEventListener("DOMContentLoaded", () => {
             shit.push(new MovingShit(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash1.png", "img/trash3.png"]));
 
         }
-        const player = new Player(5, 5, gameDiv, new Net(gameDiv, 1, 1), shit);
         let level = 0;
 
-        const projectiles = [];
         
         function gameLoop() {
             player.update();
             if (shit.length === 0) {
                 if (level === 0) {
-                    for (let i = 0; i < Math.floor(Math.random() * 5) + 1; i++) {
-                        shit.push(new AttackingShit(player, projectiles, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash2.png", "img/trash3.png"]));
+                    for (let i = 0; i < Math.floor(Math.random() * 5) + 5; i++) {
+                        shit.push(new AttackingShit(player, projectiles, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash2.png", "img/trash4.png"], 2));
                     }
                 }
                 level++;
@@ -514,3 +522,46 @@ addEventListener("DOMContentLoaded", () => {
         requestAnimationFrame(gameLoop);
     });
 })
+
+function dLev(one, two) {
+    let alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890- \'.,';
+    let da = new Array(alphabet.length).fill(0);
+    let matrix = new Array(one.length + 2).fill(0).map(() => new Array(two.length + 2).fill(0));
+    let maxDist = one.length + two.length;
+    matrix[0][0] = maxDist;
+    for (let i = 0; i <= one.length; i++) {
+        if (i > 0 && alphabet.indexOf(one[i - 1]) === -1) {
+            alphabet += one[i - 1];
+            da.push(0);
+        }
+        matrix[i + 1][0] = maxDist;
+        matrix[i + 1][1] = i;
+    }
+    for (let i = 0; i <= two.length; i++) {
+        if (i > 0 && alphabet.indexOf(two[i - 1]) === -1) {
+            alphabet += two[i - 1];
+            da.push(0);
+        }
+        matrix[0][i + 1] = maxDist;
+        matrix[1][i + 1] = i;
+    }
+    for (let i = 1; i <= one.length; i++) {
+        let db = 0;
+        for (let j = 1; j <= two.length; j++) {
+            let k = da[alphabet.indexOf(two[j - 1])];
+            let l = db;
+            let cost = 1;
+            if (one[i - 1] === two[j - 1]) {
+                cost = 0;
+                db = j;
+            }
+            matrix[i + 1][j + 1] = Math.min(matrix[i][j] + cost, matrix[i + 1][j] + 1, matrix[i][j + 1] + 1, matrix[k][l] + (i - k - 1) + 1 + (j - l - 1));
+        }
+        da[alphabet.indexOf(one[i - 1])] = i;
+    }
+    return matrix[one.length + 1][two.length + 1];
+}
+
+function prefixDLev(one, two) {
+    return dLev(one.substring(0, two.length), two);
+}
