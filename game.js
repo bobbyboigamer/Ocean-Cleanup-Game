@@ -105,6 +105,9 @@ class Entity {
         if (this.oldX !== this.x || this.oldY !== this.y || angleDiff(this.rotation, this.oldRotation) > Math.PI / 16) {
             this.image.style.transform = `translate(${this.x * tileSize - tileSize * this.rotationCenter[0] / 100}px, ${this.y * tileSize - this.imgHeight * this.rotationCenter[1] / 100}px) rotate(${this.rotation}rad)`;
         }
+        this.oldX = this.x;
+        this.oldY = this.y;
+        this.oldRotation = this.rotation;
     }
 
     oof() {
@@ -114,7 +117,7 @@ class Entity {
 
 class Player extends Entity {
     constructor(x, y, parentElem, tool, shits) {
-        super(x, y, 100, 0.1, "img/placeholder.png", parentElem);
+        super(x, y, 100, 0.1, "img/noSwim.png", parentElem);
         this.shits = shits;
         this.tool = tool;
         // they dont pay me enough
@@ -138,15 +141,22 @@ class Player extends Entity {
     update() {
         if (this.keys.get("w")) {
             this.y -= this.speed;
+            this.image.src = "img/swimUp.png";
         }
         if (this.keys.get("s")) {
             this.y += this.speed;
+            this.image.src = "img/swimDown.png";
         }
         if (this.keys.get("a")) {
             this.x -= this.speed;
+            this.image.src = "img/swimLeft.png";
         }
         if (this.keys.get("d")) {
             this.x += this.speed;
+            this.image.src = "img/swimRight.png";
+        }
+        if (this.x === this.oldX && this.y === this.oldY && this.image.src !== "img/noSwim.png") {
+            this.image.src = "img/noSwim.png";
         }
         if (dist(this.x, this.y, trashPos[0], trashPos[1]) < 2) {
             this.money += this.tool.depositShit();
