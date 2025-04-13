@@ -317,7 +317,7 @@ class Net extends Tool {
 
     grabShit(shits) {
         if (this.shit.length >= this.maxCapacity) {
-            idkAlert("you is full bruh");
+            idkAlert("You can't hold more trash. Drop off your trash at the trash can.");
             return;
         }
         const netPos = polarToCartesian(this.grabberLength, this.rotation);
@@ -348,8 +348,7 @@ class HarpoonGun extends Tool {
 
     grabShit(shits) {
         if (this.shit.length >= this.maxCapacity || !this.fire) {
-            idkAlert("you is full bruh");
-
+            idkAlert("You can't hold more trash. Drop off your trash at the trash can.");
             return;
         }
         this.fire = false;
@@ -649,7 +648,7 @@ class Oscar extends Shit {
         this.oilCooldown = 1;
         this.trashCooldown = 300;
         this.shootCooldown = 100;
-        this.health = 200;
+        this.health = 20;
         this.dead = false;
         this.victims = victims;
     }
@@ -708,6 +707,9 @@ addEventListener("DOMContentLoaded", () => {
         window.location.reload();
     })
     document.getElementById("playButton").addEventListener("click", () => {
+        if (localStorage.getItem("startTime") === null) {
+            localStorage.setItem("startTime", Date.now());
+        }
         document.body.style.backgroundImage = "url('img/background.png')";
         document.getElementById("playScreen").style.display = "none";
         const gameDiv = createElem("div", {}, {position: "absolute", left: "0", top: `${topOffset}px`, overflow: "hidden", display: "block", width: `${tileSize * mapWidth}px`, height: `${tileSize * mapHeight}px`, userSelect: "none", border: "solid 5px black"});
@@ -729,7 +731,7 @@ addEventListener("DOMContentLoaded", () => {
         function gameLoop() {
             player.update();
             if (shit.length === 0) {
-                idkAlert("u is on level " + (level + 1));
+                idkAlert("You are now on level " + (level + 1));
                 if (level === 0) {
                     for (let i = 0; i < Math.floor(Math.random() * 5) + 5; i++) {
                         shit.push(new AttackingShit(0.05, 0, player, projectiles, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash2.png", "img/trash4.png", "img/trash6.png"], 2));
@@ -739,7 +741,7 @@ addEventListener("DOMContentLoaded", () => {
                     }
                 } else if (level === 1) {
                     for (let i = 0; i < Math.floor(Math.random() * 5) + 5; i++) {
-                        shit.push(new AttackingShit(0.07, 0.02, player, projectiles, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash2.png", "img/trash4.png", "trash5.webp"], 2));
+                        shit.push(new AttackingShit(0.07, 0.02, player, projectiles, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash2.png", "img/trash4.png", "trash5.png"], 2));
                     }
                 } else if (level == 2) {
                     player.tool.oof();
@@ -770,7 +772,7 @@ addEventListener("DOMContentLoaded", () => {
                 cleanUp();
             } else if (level === 4) {
                 cleanUp();
-                idkAlert("you win")
+                idkAlert("You win!");
             } else {
                 requestAnimationFrame(gameLoop);
             }
@@ -781,6 +783,8 @@ addEventListener("DOMContentLoaded", () => {
             document.getElementById("playScreen").style.display = "flex";
             document.getElementById("trashCounter").textContent = "Trash: 0";
             document.body.style.backgroundImage = "url('img/pixil-frame-0.png')";
+            localStorage.removeItem("startTime");
+            document.getElementById("timer-display").textContent = "0 : 0 : 0";
         }
     });
     
@@ -829,46 +833,15 @@ function prefixDLev(one, two) {
     return dLev(one.substring(0, two.length), two);
 }
 
-let [milliseconds, seconds, minutes, hours] = [0, 0, 0, 0];
-let timeRef = document.querySelector(".timer-display");
-let int = null;
-
-document.getElementById("playButton").addEventListener("click", () => {
-    if(int !== null) {
-        clearInterval(int);
+setInterval(() => {
+    const startTime = localStorage.getItem("startTime");
+    if (startTime === null) {
+        document.getElementById("timer-display").textContent = "0 : 0 : 0";
+        return;
     }
-    int = setInterval(displayTimer, 10);
-});
-
-document.getElementById("pause-timer").addEventListener("click", () => {
-    clearInterval(int);
-});
-
-function displayTimer() {
-    milliseconds += 10;
-    if(milliseconds == 1000) {
-        milliseconds = 0;
-        seconds++;
-        if(seconds == 60) {
-            seconds = 0;
-            minutes++;
-            if(minutes == 60) {
-                minutes = 0;
-                hours++;
-            }
-        }
-    }
-
-    let h = hours < 10 ? "0" + hours : hours;
-    let m = minutes < 10 ? "0" + minutes : minutes;
-    let s = seconds < 10 ? "0" + seconds : seconds;
-    let ms = 
-        milliseconds < 10
-        ? "00" + milliseconds
-        : milliseconds < 100
-        ? "0" + milliseconds
-        : milliseconds;
-
-    timeRef.innerHTML = `${h} : ${m} : ${s} : ${ms}`;
-
-}
+    const elapsedTime = Date.now() - Number(startTime);
+    const milliseconds = elapsedTime % 1000;
+    const seconds = Math.floor(elapsedTime / 1000) % 60;
+    const minutes = Math.floor(elapsedTime / 60 / 1000);
+    document.getElementById("timer-display").textContent = `${minutes} : ${seconds} : ${milliseconds}`;
+})
