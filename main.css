@@ -60,6 +60,7 @@ button:hover {
     background-color: #393e46;
     border-radius: 8px;
     color: #ffffff;
+    z-index: 1
 }
 
 #shop-button {

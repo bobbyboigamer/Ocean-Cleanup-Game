@@ -138,7 +138,7 @@ class Player extends Entity {
         addEventListener("keyup", event => {
             this.keys.set(event.key, false);
         });
-        addEventListener("click", () => {
+        parentElem.addEventListener("click", () => {
             this.tool.grabShit(this.shits);
         })
         // im sure throwing this shit in an event listener will have absolutely no problems with rotation change detection in update()
@@ -181,6 +181,9 @@ class Player extends Entity {
             localStorage.setItem("money", this.money);
             document.getElementById("trashCounter").textContent = `Trash: ${this.money}`;
 
+            const noise = createElem("audio", {src: "noise/emptyTrash.mp3"});
+            noise.play();
+            noise.remove();
         }
         this.tool.x = this.x + 0.5;
         this.tool.y = this.y + 0.5;
@@ -230,10 +233,10 @@ class Tool extends Entity {
     constructor(parentElem) {
         super(-69, -420, 1, "img/placeholder.png", parentElem);
         this.shit = [];
-        this.maxCapacity = -69;
+        this.maxCapacity = 1 + Number(localStorage.getItem("capacity") ?? 0);
     }
 
-    grabShit(shit) {
+    grabShit() {
         throw new Error("override this you idiot")
     }
 
@@ -257,7 +260,6 @@ class Tool extends Entity {
 }
 
 class Net extends Tool {
-    maxCapacity = 1
     constructor(parentElem, grabberLength, grabRadius) {
         super(parentElem);
         this.image.src = "img/net.png";
@@ -286,7 +288,6 @@ class Net extends Tool {
 }
 
 class HarpoonGun extends Tool {
-    maxCapacity = 1
     constructor(fireCooldownMs, projectiles, parentElem) {
         super(parentElem);
         this.projectiles = projectiles;
@@ -301,12 +302,20 @@ class HarpoonGun extends Tool {
             return;
         }
         this.fire = false;
+
+        const noise = createElem("audio", {src: "noise/harpoon.mp3"});
+        noise.play();
+        noise.remove();
+
         setTimeout(() => {
             this.fire = true;
         }, this.fireCooldownMs);
         this.projectiles.push(new Harpoon(this.x, this.y, polarToCartesian(1, this.rotation), 0.1, shits, this.parentElem, shit => {
             this.shit.push(shit);
             shit.oof();
+            const pickupNoise = createElem("audio", {src: "noise/pickup.mp3"});
+            pickupNoise.play();
+            pickupNoise.remove();
         }));
     }
 }
@@ -377,6 +386,9 @@ class Harpoon extends Entity {
             if (dist(this.x, this.y, victim.x, victim.y) < 1 && !victim.dead) {
                 this.onAttack(victim);
                 this.oof();
+                const pickupNoise = createElem("audio", {src: "noise/pickup.mp3"});
+                pickupNoise.play();
+                pickupNoise.remove();
                 return;
             }
         }
@@ -467,8 +479,8 @@ class AttackingShit extends Shit {
 // global variable spam cuz they dont pay me enough
 const tileSize = 50;
 const topOffset = 100;
-const mapWidth = 20;
-const mapHeight = 20;
+const mapWidth = 40;
+const mapHeight = 40;
 const trashPos = [0, 0];
 
 const trashElem = createElem("img", {src: "img/trash.png", width: tileSize, height: tileSize}, {position: "absolute", left: `${trashPos[0] * tileSize}px`, top: `${trashPos[1] * tileSize}px`});
@@ -482,7 +494,8 @@ addEventListener("DOMContentLoaded", () => {
     document.getElementById("playButton").addEventListener("click", () => {
         document.body.style.backgroundImage = "url('img/background.png')";
         document.getElementById("playScreen").style.display = "none";
-        const gameDiv = createElem("div", {}, {position: "absolute", left: "0", top: `${topOffset}px`, overflow: "hidden", display: "block", width: `${tileSize * mapWidth}px`, height: `${tileSize * mapHeight}px`, userSelect: "none"});
+        const gameDiv = createElem("div", {}, {position: "absolute", left: "0", top: `${topOffset}px`, overflow: "hidden", display: "block", width: `${tileSize * mapWidth}px`, height: `${tileSize * mapHeight}px`, userSelect: "none", border: "solid 5px black"});
+        gameDiv.appendChild(createElem("audio", {src: "noise/ocean.mp3", loop: true, autoplay: true}))
         gameDiv.addEventListener("dragstart", event => event.preventDefault());
         gameDiv.appendChild(trashElem);
         document.body.appendChild(gameDiv);
@@ -490,7 +503,7 @@ addEventListener("DOMContentLoaded", () => {
         let shit = [];
         const projectiles = [];
         const player = new Player(5, 5, gameDiv, localStorage.getItem("harpoon") ? new HarpoonGun(1000, projectiles, gameDiv) : new Net(gameDiv, 1, 1), shit);
-        for (let i = 0; i < Math.floor(Math.random() * 5) + 5; i++) {
+        for (let i = 0; i < Math.floor(Math.random() * 10) + 10; i++) {
             shit.push(new MovingShit(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash1.png", "img/trash3.png"]));
 
         }
@@ -501,7 +514,7 @@ addEventListener("DOMContentLoaded", () => {
             player.update();
             if (shit.length === 0) {
                 if (level === 0) {
-                    for (let i = 0; i < Math.floor(Math.random() * 5) + 5; i++) {
+                    for (let i = 0; i < Math.floor(Math.random() * 10) + 10; i++) {
                         shit.push(new AttackingShit(player, projectiles, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash2.png", "img/trash4.png"], 2));
                     }
                 }
@@ -518,7 +531,7 @@ addEventListener("DOMContentLoaded", () => {
             window.scrollTo(player.x * tileSize - screen.availWidth / 2, player.y * tileSize - screen.availHeight / 2);
             if (player.health <= 0) {
                 alert("you died score 0");
-                localStorage.setItem("money", 0);
+                localStorage.clear();
                 gameDiv.remove();
                 document.getElementById("playScreen").style.display = "flex";
             } else {

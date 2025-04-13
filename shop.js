@@ -60,7 +60,7 @@ const items = [
     },
     {
         name: "capacity",
-        imgSrc: "../img/placeholder.png",
+        imgSrc: "../img/bag.png",
         title: "Capacity Upgrade",
         description: "Increase capacity by 1!",
         baseCost: 15,
