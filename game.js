@@ -276,7 +276,7 @@ class Net extends Tool {
         netPos[0] += this.x;
         netPos[1] += this.y;
         for (const shit of shits) {
-            if (dist(netPos[0], netPos[1], shit.x, shit.y) <= this.grabRadius) {
+            if (dist(netPos[0], netPos[1], shit.x, shit.y) <= this.grabRadius && !shit.dead) {
                 this.shit.push(shit)
                 shit.oof();
                 return;
@@ -285,11 +285,30 @@ class Net extends Tool {
     }
 }
 
+class HarpoonGun extends Tool {
+    maxCapacity = 1
+    constructor(projectiles, parentElem) {
+        super(parentElem);
+        this.projectiles = projectiles;
+        this.image.src = "../img/harpoon.png";
+        this.imgHeight = this.image.offsetHeight;
+    }
+
+    grabShit(shits) {
+        if (this.shit.length >= this.maxCapacity) {
+            return;
+        }
+        this.projectiles.push(new Harpoon(this.x, this.y, polarToCartesian(1, this.rotation), 0.1, shits, this.parentElem, shit => {
+            this.shit.push(shit);
+            shit.oof();
+        }));
+    }
+}
+
 class Shit extends Entity {
-    constructor(x, y, parentElem, trashImgs) {
-        super(x, y, 0.01, trashImgs[Math.floor(Math.random() * trashImgs.length)], parentElem);
-        this.value = 1;
-        this.update();
+    constructor(x, y, speed, parentElem, trashImgs, value = 1) {
+        super(x, y, speed, trashImgs[Math.floor(Math.random() * trashImgs.length)], parentElem);
+        this.value = value;
         this.dead = false;
     }
 
@@ -300,8 +319,8 @@ class Shit extends Entity {
 }
 
 class MovingShit extends Shit {
-    constructor(...args) {
-        super(...args);
+    constructor(x, y, parentElem, trashImgs, value = 1) {
+        super(x, y, 0.01, parentElem, trashImgs, value);
         this.driftDirection = ["up", "down", "left", "right"][Math.floor(Math.random() * 4)];
         this.driftCounter = 0;
         this.maxDriftFrames = Math.floor(Math.random() * 300);
@@ -327,8 +346,45 @@ class MovingShit extends Shit {
     }
 }
 
-class Projectile extends Entity {
-    constructor(x, y, moveVector, speed, victim, damage, parentElem) {
+class Harpoon extends Entity {
+    constructor(x, y, moveVector, speed, victims, parentElem, onAttack) {
+        super(x, y, speed, "img/harpoonProjectile.png", parentElem);
+        this.rotation = Math.atan2(moveVector[1], moveVector[0]);
+        this.moveVector = scaleVector(moveVector[0], moveVector[1], speed);
+        this.rotationCenter = [0, 50];
+        this.victims = victims;
+        this.dead = false;
+        this.onAttack = onAttack;
+    }
+
+    update() {
+        if (this.dead) {
+            return;
+        }
+        this.x += this.moveVector[0];
+        this.y += this.moveVector[1];
+        if (this.x < 0 || this.y < 0 || this.x >= mapWidth - 1 || this.y >= mapWidth - 1) {
+            this.oof();
+            return;
+        }
+        for (const victim of this.victims) {
+            if (dist(this.x, this.y, victim.x, victim.y) < 1 && !victim.dead) {
+                this.onAttack(victim);
+                this.oof();
+                return;
+            }
+        }
+        super.update();
+    }
+
+    oof() {
+        this.dead = true;
+        super.oof();
+    }
+}
+
+class TrashProjectile extends Entity {
+    constructor(x, y, moveVector, speed, victims, damage, parentElem, onAttack = victim => victim.takeDamage(damage)) {
         let imgSrc = "";
         if (Math.abs(moveVector[0]) > Math.abs(moveVector[1])) {
             if (moveVector[0] < 0) {
@@ -416,8 +472,11 @@ addEventListener("DOMContentLoaded", () => {
         document.body.appendChild(gameDiv);
 
         let shit = [];
+        const projectiles = [];
+        const player = new Player(5, 5, gameDiv, localStorage.getItem("harpoon") ? new HarpoonGun(projectiles, gameDiv) : new Net(gameDiv, 1, 1), shit);
         for (let i = 0; i < Math.floor(Math.random() * 5) + 5; i++) {
             shit.push(new MovingShit(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash1.png", "img/trash3.png"]));
+
         }
         const player = new Player(5, 5, gameDiv, new Net(gameDiv, 1, 1), shit);
         let level = 0;
