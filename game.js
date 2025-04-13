@@ -258,8 +258,8 @@ class Player extends Entity {
 }
 
 class Tool extends Entity {
-    constructor(parentElem) {
-        super(-69, -420, 1, "img/placeholder.png", parentElem);
+    constructor(imgSrc, parentElem) {
+        super(-69, -420, 1, imgSrc, parentElem);
         this.shit = [];
         this.maxCapacity = 1 + Number(localStorage.getItem("capacity") ?? 0);
     }
@@ -289,9 +289,9 @@ class Tool extends Entity {
 
 class Net extends Tool {
     constructor(parentElem, grabberLength, grabRadius) {
-        super(parentElem);
-        this.image.src = "img/net.png";
-        this.imgHeight = this.image.offsetHeight
+        super("img/net.png", parentElem);
+        // this.image.src = "img/net.png";
+        // this.imgHeight = this.image.offsetHeight
         this.grabberLength = grabberLength;
         this.grabRadius = grabRadius;
         this.rotationCenter = [0, 18];
@@ -321,10 +321,10 @@ class Net extends Tool {
 
 class HarpoonGun extends Tool {
     constructor(fireCooldownMs, projectiles, parentElem) {
-        super(parentElem);
+        super("../img/harpoon.png", parentElem);
         this.projectiles = projectiles;
-        this.image.src = "../img/harpoon.png";
-        this.imgHeight = this.image.offsetHeight;
+        // this.image.src = "../img/harpoon.png";
+        // this.imgHeight = this.image.offsetHeight;
         this.fireCooldownMs = fireCooldownMs;
         this.fire = true;
     }
@@ -530,6 +530,108 @@ class Oil extends Entity {
     }
 }
 
+class TheFinalWeapon extends Tool {
+    constructor(oscar, parentElem) {
+        super("img/thefinalweapon.png", parentElem);
+        this.image.style.width = "auto";
+        this.image.height = 2 * tileSize;
+        this.image.imgHeight = this.image.offsetHeight;
+        this.image.imgWidth = this.image.offsetWidth;
+        this.oscar = oscar;
+        this.fireCooldown = false;
+        this.image.style.transformOrigin = "0 50%";
+        this.rotationCenter = [0, 50];
+    }
+    
+    grabShit() {
+        if (this.fireCooldown) {
+            return;
+        }
+
+        this.image.src = "img/finalweaponlaser.png";
+        this.image.imgHeight = this.image.offsetHeight;
+        this.image.imgWidth = this.image.offsetWidth;
+        this.fireCooldown = true;
+        setTimeout(() => {
+            this.fireCooldown = false;
+        }, 5000);
+
+        const startNoise = createElem("audio", {src: "noise/laser_start.mp3"});
+        startNoise.play();
+        startNoise.remove();
+
+        const loopNoise = createElem("audio", {src: "noise/laser_loop.mp3", loop: true});
+        loopNoise.play();
+
+        const damageTimeout = setTimeout(() => {
+            this.oscar.health -= 10;
+            this.image.src = "img/thefinalweapon.png";
+            this.image.imgHeight = this.image.offsetHeight;
+            this.image.imgWidth = this.image.offsetWidth;
+            loopNoise.loop = false;
+            loopNoise.pause();
+            loopNoise.remove();
+        }, 3000);
+        const idk = setInterval(() => {
+            const thisToOscar = Math.atan2(this.oscar.y + Oscar.size / 2 - this.y, this.oscar.x + Oscar.size / 2 - this.x);
+            if (angleDiff(thisToOscar, this.rotation) > Math.PI / 16) {
+                this.image.src = "img/thefinalweapon.png";
+                this.image.imgHeight = this.image.offsetHeight;
+                this.image.imgWidth = this.image.offsetWidth;
+                loopNoise.loop = false;
+                loopNoise.pause();
+                loopNoise.remove();
+                clearTimeout(damageTimeout);
+                clearInterval(idk);
+            }
+        }, 100)
+    }
+}
+
+class Oscar extends Shit {
+    static size = 3
+    
+    constructor(x, y, victims, parentElem, projectiles) {
+        super(x, y, 0.1, parentElem, ["img/oscar.png"], 5);
+        this.image.width = Oscar.size * tileSize;
+        this.imgWidth *= Oscar.size;
+        this.imgHeight *= Oscar.size;
+        this.projectiles = projectiles;
+        this.shits = [];
+        this.oilCooldown = 300;
+        this.trashCooldown = 600;
+        this.shootCooldown = 200;
+        this.health = 20;
+        this.dead = false;
+        this.victims = victims;
+    }
+
+    findDestination() {
+        return [bound(this.x + Math.floor(Math.random() * 10) - 5, 0, mapWidth), bound(this.y + Math.floor(Math.random() * 10) - 5, 0, mapHeight)];
+    }
+    
+    update() {
+        if (this.health <= 0) {
+            this.oof();
+        }
+        this.oilCooldown--;
+        if (this.oilCooldown <= 0) {
+            this.oilCooldown = 300;
+            this.projectiles.push(new Oil(...this.findDestination(), this.victims, 10, this.parentElem));
+        }
+        this.trashCooldown--;
+        if (this.trashCooldown <= 0) {
+            this.trashCooldown = 600;
+            // this.shits.push(new MovingShit(...this.findDestination(), this.parentElem, [1, 2, 3, 4, 5, 6].map(number => `img/trash${number}.png`), 1));
+        }
+        this.shootCooldown--;
+        if (this.shootCooldown <= 0) {
+            this.shootCooldown = 300;
+            this.projectiles.push(new TrashProjectile(this.x, this.y, [this.victims[0].x - this.x, this.victims[0].y - this.y], 0.1, this.victims, 5, this.parentElem, victim => victim.takeDamage(20)))
+        }
+        super.update();
+    }
+}
 
 // global variable spam cuz they dont pay me enough
 const tileSize = 50;
@@ -557,34 +659,40 @@ addEventListener("DOMContentLoaded", () => {
 
         let shit = [];
         const projectiles = [];
-        const player = new Player(5, 5, gameDiv, localStorage.getItem("harpoon") ? new HarpoonGun(1000 * 0.9 ** (Number(localStorage.getItem("coffee") ?? 0)), projectiles, gameDiv) : new Net(gameDiv, 1, 1), shit);
+        const tool = localStorage.getItem("harpoon") ? new HarpoonGun(1000 * 0.9 ** (Number(localStorage.getItem("coffee") ?? 0)), projectiles, gameDiv) : new Net(gameDiv, 1, 1);
+        const player = new Player(5, 5, gameDiv, tool, shit);
         for (let i = 0; i < Math.floor(Math.random() * 10) + 10; i++) {
             shit.push(new MovingShit(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash1.png", "img/trash3.png"]));
             projectiles.push(new Oil(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), [player], 10, gameDiv));
         }
         let level = 0;
-
         
         function gameLoop() {
             player.update();
             if (shit.length === 0) {
                 if (level === 0) {
                     for (let i = 0; i < Math.floor(Math.random() * 5) + 5; i++) {
-                        shit.push(new AttackingShit(0.05, 0, player, projectiles, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash2.png", "img/trash4.png"], 2));
+                        shit.push(new AttackingShit(0.05, 0, player, projectiles, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash2.png", "img/trash4.png", "img/trash6.png"], 2));
                     }
                     for (let i = 0; i < Math.floor(Math.random() * 20) + 20; i++) {
                         projectiles.push(new Oil(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), [player], 10, gameDiv));
                     }
                 } else if (level === 1) {
                     for (let i = 0; i < Math.floor(Math.random() * 5) + 5; i++) {
-                        shit.push(new AttackingShit(0.07, 0.02, player, projectiles, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash2.png", "img/trash4.png"], 2));
+                        shit.push(new AttackingShit(0.07, 0.02, player, projectiles, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash2.png", "img/trash4.png", "trash5.webp"], 2));
                     }
+                } else if (level == 2) {
+                    player.tool.oof();
+                    const oscar = new Oscar(9, 9, [player], gameDiv, projectiles);
+                    player.tool = new TheFinalWeapon(oscar, gameDiv);
+                    shit.push(oscar);
                 }
                 level++;
+                alert("u is on level " + level);
             }
             shit = shit.filter(thing => {
                 thing.update();
-                return !thing.dead
+                return !thing.dead;
             });
             for (const projectile of projectiles) {
                 projectile.update();
@@ -597,15 +705,23 @@ addEventListener("DOMContentLoaded", () => {
                 oof.remove();
                 alert("you died score 0");
                 localStorage.clear();
-                gameDiv.remove();
-                document.getElementById("playScreen").style.display = "flex";
-                document.getElementById("trashCounter").textContent = `Trash: ${money}`;
+                cleanUp();
+            } else if (level === 4) {
+                cleanUp();
+                alert("you win")
             } else {
                 requestAnimationFrame(gameLoop);
             }
         }
         requestAnimationFrame(gameLoop);
+        function cleanUp() {
+            gameDiv.remove();
+            document.getElementById("playScreen").style.display = "flex";
+            document.getElementById("trashCounter").textContent = "Trash: 0";
+            document.body.style.backgroundImage = "url('img/pixil-frame-0.png')";
+        }
     });
+    
 })
 
 function dLev(one, two) {
