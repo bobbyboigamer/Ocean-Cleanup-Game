@@ -142,9 +142,10 @@ window.addEventListener("blur", () => {
 
 class Player extends Entity {
     constructor(x, y, parentElem, tool, shits) {
-        const boatPresent = localStorage.getItem("boat") !== null;
-        super(x, y, 0.1 * (Number(localStorage.getItem("speed") ?? 0) + 1), boatPresent ? "img/lvl2boat.png" : "img/noSwim.png", parentElem, boatPresent ? 3 : 1);
-        this.boat = boatPresent;
+        const boatNum = Number(localStorage.getItem("boat") ?? 0);
+        const boats = [["img/noSwim.png", 1], ["img/lvl2boat.png", 3], ["img/jetski.png", 1]];
+        super(x, y, 0.1 * (Number(localStorage.getItem("speed") ?? 0) + 1) + 0.05 * boatNum, boats[boatNum][0], parentElem, boats[boatNum][1]);
+        this.boat = boatNum > 0;
         this.maxHealth = 100 + 5 * Number(localStorage.getItem("health") ?? 0);
         this.health = this.maxHealth;
         this.healthBar = createElem("meter", {max: this.maxHealth, width: tileSize, value: this.maxHealth}, {position: "absolute", left: "0", top: "0"});
@@ -160,7 +161,7 @@ class Player extends Entity {
             this.tool.rotation = Math.atan2((event.pageY - topOffset) / tileSize - this.y - 0.5, event.pageX / tileSize - this.x - 0.5);
         });
         this.money = Number(localStorage.getItem("money")) ?? 0;
-        if (boatPresent) {
+        if (boatNum > 0) {
             this.rotationCenter = [50, 50];
             this.imgHeight = this.image.offsetHeight;
         }
@@ -201,7 +202,7 @@ class Player extends Entity {
             if (!this.boat) {
                 this.image.src = "img/swimRight.png";
             }
-        } else {
+        } else if (!this.boat) {
             this.image.src = "img/noSwim.png";
         }
         if (dist(this.x, this.y, trashPos[0], trashPos[1]) < 2 && this.tool.shit.length > 0) {
@@ -269,7 +270,6 @@ class Player extends Entity {
             idkAlert(`Incorrect answer. Answer was ${question[1]}. Try again!`);
             this.promptQuestion();
         }
-        alert(fact[Math.floor(Math.random() * fact.length)])
     }
 }
 
@@ -278,6 +278,7 @@ class Tool extends Entity {
         super(-69, -420, 1, imgSrc, parentElem);
         this.shit = [];
         this.maxCapacity = 1 + Number(localStorage.getItem("capacity") ?? 0);
+        this.image.style.zIndex = 1;
     }
 
     grabShit() {
@@ -389,6 +390,9 @@ class MovingShit extends Shit {
     }
 
     update() {
+        if (this.dead) {
+            return;
+        }
         if (this.driftDirection === "up") {
             this.y -= this.speed;
         } else if (this.driftDirection === "down") {
@@ -508,6 +512,9 @@ class AttackingShit extends Shit {
     }
 
     update() {
+        if (this.dead) {
+            return;
+        }
         if (dist(this.x, this.y, this.victim.x, this.victim.y) < 3) {
             const moveVector = scaleVector(this.x - this.victim.x, this.y - this.victim.y, this.speed);
             this.x += moveVector[0];
@@ -557,13 +564,51 @@ class TheFinalWeapon extends Tool {
         this.fireCooldown = false;
         this.image.style.transformOrigin = "0 50%";
         this.rotationCenter = [0, 50];
+        this.timeout = NaN;
+        this.loopNoise = undefined;
+        this.hitOscar = false;
+    }
+    
+    endLaser() {
+        this.image.src = "img/thefinalweapon.png";
+        this.image.imgHeight = this.image.offsetHeight;
+        this.image.imgWidth = this.image.offsetWidth;
+        if (this.loopNoise !== undefined) {
+            this.loopNoise.loop = false;
+            this.loopNoise.pause();
+            this.loopNoise.remove();
+            this.loopNoise = undefined;
+        }
+        this.timeout = NaN;
+        this.hitOscar = false;
+    }
+
+    update() {
+        if (!isNaN(this.timeout)) {
+            const thisToOscar = Math.atan2(this.oscar.y + Oscar.size / 2 - this.y, this.oscar.x + Oscar.size / 2 - this.x);
+            let hitSomething = false;
+            if (Math.abs(angleDiff(thisToOscar, this.rotation)) < Math.PI / 16) {
+                this.hitOscar = true;
+                hitSomething = true;
+            }
+            for (const shit of this.oscar.shits) {
+                const thisToShit = Math.atan2(shit.y - this.y, shit.x - this.x);
+                if (Math.abs(angleDiff(thisToShit, this.rotation)) < Math.PI / 32) {
+                    shit.oof();
+                    hitSomething = true;
+                }
+            }
+            if (!hitSomething) {
+                this.endLaser();
+            }
+        }
+        super.update();
     }
     
     grabShit() {
         if (this.fireCooldown) {
             return;
         }
-
         this.image.src = "img/finalweaponlaser.png";
         this.image.imgHeight = this.image.offsetHeight;
         this.image.imgWidth = this.image.offsetWidth;
@@ -576,31 +621,18 @@ class TheFinalWeapon extends Tool {
         startNoise.play();
         startNoise.remove();
 
-        const loopNoise = createElem("audio", {src: "noise/laser_loop.mp3", loop: true});
-        loopNoise.play();
+        this.loopNoise = createElem("audio", {src: "noise/laser_loop.mp3", loop: true});
+        this.loopNoise.play();
 
-        const damageTimeout = setTimeout(() => {
-            this.oscar.health -= 10;
-            this.image.src = "img/thefinalweapon.png";
-            this.image.imgHeight = this.image.offsetHeight;
-            this.image.imgWidth = this.image.offsetWidth;
-            loopNoise.loop = false;
-            loopNoise.pause();
-            loopNoise.remove();
-        }, 3000);
-        const idk = setInterval(() => {
-            const thisToOscar = Math.atan2(this.oscar.y + Oscar.size / 2 - this.y, this.oscar.x + Oscar.size / 2 - this.x);
-            if (angleDiff(thisToOscar, this.rotation) > Math.PI / 16) {
-                this.image.src = "img/thefinalweapon.png";
-                this.image.imgHeight = this.image.offsetHeight;
-                this.image.imgWidth = this.image.offsetWidth;
-                loopNoise.loop = false;
-                loopNoise.pause();
-                loopNoise.remove();
-                clearTimeout(damageTimeout);
-                clearInterval(idk);
+        this.timeout = setTimeout(() => {
+            if (this.hitOscar) {
+                this.oscar.health -= 10;
+                const hit = createElem("audio", {src: `noise/oscar/hit${Math.floor(Math.random() * 4) + 1}.mp3`});
+                hit.play();
+                hit.remove();
             }
-        }, 100)
+            this.endLaser();
+        }, 3000);
     }
 }
 
@@ -614,16 +646,16 @@ class Oscar extends Shit {
         this.imgHeight *= Oscar.size;
         this.projectiles = projectiles;
         this.shits = [];
-        this.oilCooldown = 300;
-        this.trashCooldown = 600;
-        this.shootCooldown = 200;
-        this.health = 20;
+        this.oilCooldown = 1;
+        this.trashCooldown = 300;
+        this.shootCooldown = 100;
+        this.health = 200;
         this.dead = false;
         this.victims = victims;
     }
 
     findDestination() {
-        return [bound(this.x + Math.floor(Math.random() * 10) - 5, 0, mapWidth), bound(this.y + Math.floor(Math.random() * 10) - 5, 0, mapHeight)];
+        return [bound(this.x + Oscar.size / 2 + Math.floor(Math.random() * 20) - 10, 0, mapWidth), bound(this.y + Oscar.size / 2 + Math.floor(Math.random() * 20) - 10, 0, mapHeight)];
     }
     
     update() {
@@ -632,20 +664,31 @@ class Oscar extends Shit {
         }
         this.oilCooldown--;
         if (this.oilCooldown <= 0) {
-            this.oilCooldown = 300;
+            this.oilCooldown = Math.floor(Math.random() * 200);
             this.projectiles.push(new Oil(...this.findDestination(), this.victims, 10, this.parentElem));
         }
         this.trashCooldown--;
         if (this.trashCooldown <= 0) {
-            this.trashCooldown = 600;
-            // this.shits.push(new MovingShit(...this.findDestination(), this.parentElem, [1, 2, 3, 4, 5, 6].map(number => `img/trash${number}.png`), 1));
+            this.trashCooldown = 300;
+            this.shits.push(new AttackingShit(0.05, 0, this.victims[0], this.projectiles, ...this.findDestination(), this.parentElem, [1, 2, 3, 4, 5, 6].map(number => `img/trash${number}.png`), 1));
         }
         this.shootCooldown--;
         if (this.shootCooldown <= 0) {
-            this.shootCooldown = 300;
-            this.projectiles.push(new TrashProjectile(this.x, this.y, [this.victims[0].x - this.x, this.victims[0].y - this.y], 0.1, this.victims, 5, this.parentElem, victim => victim.takeDamage(20)))
+            this.shootCooldown = Math.floor(Math.random() * 100) + 200;
+            this.projectiles.push(new TrashProjectile(this.x, this.y, [this.victims[0].x - this.x, this.victims[0].y - this.y], 0.2, this.victims, 5, this.parentElem, victim => victim.takeDamage(20)))
         }
+        this.shits = this.shits.filter(shit => {
+            shit.update();
+            return !this.dead;
+        })
         super.update();
+    }
+
+    oof() {
+        const die = createElem("audio", {src: "noise/oscar/end.mp3"});
+        die.play();
+        die.remove();
+        super.oof();
     }
 }
 
@@ -700,12 +743,14 @@ addEventListener("DOMContentLoaded", () => {
                     }
                 } else if (level == 2) {
                     player.tool.oof();
-                    const oscar = new Oscar(9, 9, [player], gameDiv, projectiles);
+                    const spawn = createElem("audio", {src: "noise/oscar/spawn.mp3"});
+                    spawn.play();
+                    spawn.remove();
+                    const oscar = new Oscar(Math.floor(Math.random() * (mapWidth - 5)), Math.floor(Math.random() * (mapHeight - 5)), [player], gameDiv, projectiles);
                     player.tool = new TheFinalWeapon(oscar, gameDiv);
                     shit.push(oscar);
                 }
                 level++;
-                alert("u is on level " + level);
             }
             shit = shit.filter(thing => {
                 thing.update();

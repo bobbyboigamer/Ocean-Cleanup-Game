@@ -155,7 +155,7 @@ after test, implementing designed trash pile currency */
 }
 .timer-display{
     position: fixed;
-    font-size: 15px;
+    font-size: 30px;
     top: 10px;
     right: 150px;
     padding: 10px 15px;
