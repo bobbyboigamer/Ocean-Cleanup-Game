@@ -98,16 +98,19 @@ class Entity {
         this.health = health;
         this.speed = speed;
         this.image = createElem("img", {src: imgSrc, width: tileSize}, {position: "absolute", left: "0", top: "0"});
+        // methinks messing with the DOM in an requestAnimationFrame is slow or smth
         this.parentElem = parentElem;
         this.parentElem.appendChild(this.image);
+        this.rotationCenter = [50, 50]
+        this.imgHeight = this.image.offsetHeight;
     }
 
     update() {
-        this.x = bound(this.x, 0, mapWidth);
-        this.y = bound(this.y, 0, mapHeight);
+        this.x = bound(this.x, 0, mapWidth - 1);
+        this.y = bound(this.y, 0, mapHeight - 1);
         // angle threshold arbitrarily chosen
         if (this.oldX !== this.x || this.oldY !== this.y || angleDiff(this.rotation, this.oldRotation) > Math.PI / 16) {
-            this.image.style.transform = `translate(${this.x * tileSize}px, ${this.y * tileSize}px) rotate(${this.rotation}rad)`;
+            this.image.style.transform = `translate(${this.x * tileSize - tileSize * this.rotationCenter[0] / 100}px, ${this.y * tileSize - this.imgHeight * this.rotationCenter[1] / 100}px) rotate(${this.rotation}rad)`;
         }
     }
 
@@ -120,6 +123,7 @@ class Player extends Entity {
     constructor(x, y, parentElem, tool) {
         super(x, y, 100, 1, "img/placeholder.png", parentElem);
         this.tool = tool;
+        this.rotationCenter = [0, 0]
         // they dont pay me enough
         this.keys = new Map();
         addEventListener("keydown", event => {
@@ -147,8 +151,8 @@ class Player extends Entity {
         if (this.keys.get("d")) {
             this.x += this.speed;
         }
-        this.tool.x = this.x;
-        this.tool.y = this.y;
+        this.tool.x = this.x + 0.5;
+        this.tool.y = this.y + 0.5;
         this.tool.update();
         super.update();
     }
@@ -181,10 +185,12 @@ class Net extends Tool {
     maxCapacity = 1
     constructor(parentElem, grabberLength, grabRadius) {
         super(parentElem);
+        this.image.src = "img/net.png";
+        this.imgHeight = this.image.offsetHeight
         this.grabberLength = grabberLength;
         this.grabRadius = grabRadius;
-        this.image.style.transformOrigin = "100% 50%"
-        this.image.src = "img/net.png";
+        this.rotationCenter = [0, 18];
+        this.image.style.transformOrigin = `${this.rotationCenter[0]}% ${this.rotationCenter[1]}%`
     }
 
     grabShit(worldShit) {
@@ -208,7 +214,7 @@ class Net extends Tool {
 addEventListener("DOMContentLoaded", () => {
     document.getElementById("playButton").addEventListener("click", () => {
         document.getElementById("playScreen").remove();
-        const gameDiv = createElem("div", {}, {position: "absolute", left: "0", top: "0", overflow: "hidden", display: "block", width: "4000px", height: "4000px"});
+        const gameDiv = createElem("div", {}, {position: "absolute", left: "0", top: "0", overflow: "hidden", display: "block", width: `${tileSize * mapWidth}px`, height: `${tileSize * mapHeight}px`});
         document.body.appendChild(gameDiv);
         const idk = new Player(5, 5, gameDiv, new Net(gameDiv, 69, 420));
         
