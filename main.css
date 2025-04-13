@@ -1,3 +1,12 @@
+body {
+    background-image: url("img/pixil-frame-0.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    overflow: hidden;
+}
+
 #playScreen {
     width: 100vw; 
     height: 100vh;
@@ -8,10 +17,11 @@
 }
 
 #title {
-    width: 350px;
-    height: 50px;
+    height: 200px;
+    font-size: 68px;
     text-align: center;
     margin-bottom: 30px;
+    text-shadow: rgb(2, 57, 255) 1px 0 5px;
 }
 
 button {
@@ -20,37 +30,59 @@ button {
     text-decoration: none;
     outline: none;
     cursor: pointer;
-    margin-bottom: 5px;
-    background-color: black;
+    margin: 0px 5px 0px;
+    background-color: #2b3e51;
     color: white;
+    font-size: 25px;
+    border-radius: 10px;
 }
 
 #playButton {
-    width: 120px;
-    height: 40px;
+    width: 175px;
+    height: 50px;
 }
 
 #quitButton {
-    width: 120px;
-    height: 40px;
+    width: 175px;
+    height: 50px;
 }
 
 #gameEmblem {
     width: 100px;
-    height: 100px;
+    height: 50px;
     background-color: skyblue;
     text-decoration: none;
 }
 
 
 /* Sprites */
-
-#playerSprite{
+/* Player Sprites */
+#starterPlayerSprite{
     width: 50px;
-    height: 50px;
+    height: 30px;
     /* color only for test, please edit the "playerSprite after test,
 implementing designed player sprite */
     background-color: red;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+}
+#woodenBoatSprite{
+    width: 50px;
+    height: 30px;
+    /* color only for test, please edit the "woodenBoatSprite" after test,
+implementing designed wooden boat sprite */
+    background-color: burlywood;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+}
+#PirateShipSprite{
+    width: 50px;
+    height: 30px;
+    /* color only for test, please edit the "pirateShipSprite" after test,
+implementing designed pirate ship sprite */
+    background-color: brown;
     position: absolute;
     top: 50%;
     left: 50%;
