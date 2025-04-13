@@ -173,10 +173,14 @@ class Player extends Entity {
         if (this.x === this.oldX && this.y === this.oldY && this.image.src !== "img/noSwim.png") {
             this.image.src = "img/noSwim.png";
         }
-        if (dist(this.x, this.y, trashPos[0], trashPos[1]) < 2) {
+        if (dist(this.x, this.y, trashPos[0], trashPos[1]) < 2 && this.tool.shit.length > 0) {
+            if (this.money % 3 === 0) {
+                this.promptQuestion();
+            }
             this.money += this.tool.depositShit();
             localStorage.setItem("money", this.money);
             document.getElementById("trashCounter").textContent = `Trash: ${this.money}`;
+
         }
         this.tool.x = this.x + 0.5;
         this.tool.y = this.y + 0.5;
@@ -184,6 +188,41 @@ class Player extends Entity {
         this.healthBar.value = this.health;
         this.healthBar.style.transform = `translate(${this.x * tileSize}px, ${this.y * tileSize + this.imgHeight}px)`;
         super.update();
+    }
+
+    // Function to prompt the user with a question
+    promptQuestion() {
+        const questions = [
+            ["Where does a banana peel go", "compost"],
+            ["Where does a plastic water bottle go", "recycle"],
+            ["Where does a Aluminum soda can go", "recycle"],
+            ["Where does a Broken glass jar go?", "trash"],
+            ["Where does an Apple core go?", "compost"],
+            ["Where does a Empty plastic yogurt container go?", "recycle"],
+            ["Where does a Plastic shopping bag go?", "trash"],
+            ["Where does a Newspaper go?", "recycle"],
+            ["Where does an Egg carton (styrofoam) go?", "trash"],
+            ["Where does a Cheese wrapper (plastic) go?", "trash"],
+            ["Where does a Pineapple top go?", "compost"],
+            ["Where does a clean Pizza box go?", "recycle"],
+            ["Where does a Toothpaste tube go?", "trash"],
+            ["Where does a Orange peel go?", "compost"],
+            ["Where does a Tissue (used) go?", "trash"],
+            ["Where does a Plastic milk jug go?", "recycle"],
+            ["Where does a Eggshells go?", "compost"],
+        ];
+        const question = questions[Math.floor(Math.random() * questions.length)];
+
+        const userAnswer = prompt(question[0] + " (compost, recycle, trash)");
+        if (prefixDLev(userAnswer, question[1]) < 3) {
+            alert("Correct! You've earned XP Environmental Sustainability");
+            for (const key of this.keys.keys()) {
+                this.keys.set(key, false);
+            }
+        } else {
+            alert(`Incorrect answer. Answer was ${question[1]}. Try again!`);
+            this.promptQuestion();
+        }
     }
 }
 
