@@ -347,7 +347,10 @@ class HarpoonGun extends Tool {
     }
 
     grabShit(shits) {
-        if (this.shit.length >= this.maxCapacity || !this.fire) {
+        if (!this.fire) {
+            return;
+        }
+        if (this.shit.length >= this.maxCapacity) {
             idkAlert("You can't hold more trash. Drop off your trash at the trash can.");
             return;
         }
