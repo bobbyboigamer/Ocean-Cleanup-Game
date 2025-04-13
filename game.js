@@ -1,5 +1,12 @@
 // will not separate files for now because no bundler + CORS prevents files from being split into modules
 
+function scaleVector(x, y, length) {
+    const distance = dist(0, 0, x, y);
+    x = x / distance * length;
+    y = y / distance * length;
+    return [x, y];
+}
+
 /**
  * Modulus. Like remainder but also for negative numbers.
  * mod(420, 69) = 6; mod(-69, 420) = 351;
@@ -273,6 +280,70 @@ class MovingShit extends Shit {
     }
 }
 
+class Projectile extends Entity {
+    constructor(x, y, moveVector, speed, victim, damage, parentElem) {
+        let imgSrc = "";
+        if (Math.abs(moveVector[0]) > Math.abs(moveVector[1])) {
+            if (moveVector[0] < 0) {
+                imgSrc = "img/projectileLeft.png";
+            } else if (moveVector[0] > 0) {
+                imgSrc = "img/projectileRight.png";
+            }
+        } else {
+            if (moveVector[1] < 0) {
+                imgSrc = "img/projectileUp.png";
+            } else {
+                imgSrc = "img/projectileDown.png"
+            }
+        }
+        super(x, y, speed, imgSrc, parentElem);
+        this.victim = victim;
+        this.damage = damage;
+        this.moveVector = scaleVector(moveVector[0], moveVector[1], this.speed);
+        this.dead = false;
+    }
+
+    update() {
+        if (this.dead) {
+            return;
+        }
+        this.x += this.moveVector[0];
+        this.y += this.moveVector[1];
+        if (dist(this.x, this.y, this.victim.x, this.victim.y) < 1) {
+            this.victim.health -= this.damage;
+            this.oof();
+            return;
+        } else if (this.x < 0 || this.y < 0 || this.x >= mapWidth - 1 || this.y >= mapWidth - 1) {
+            this.oof();
+            return;
+        }
+        super.update();
+    }
+
+    oof() {
+        this.dead = true;
+        super.oof();
+    }
+}
+
+class AttackingShit extends Shit {
+    constructor(victim, projectiles, ...args) {
+        super(...args);
+        this.victim = victim;
+        this.attackCooldown = Math.floor(Math.random() * 300) + 300;
+        this.projectiles = projectiles;
+    }
+
+    update() {
+        this.attackCooldown--;
+        if (this.attackCooldown <= 0) {
+            this.attackCooldown = Math.floor(Math.random() * 300) + 300;
+            this.projectiles.push(new Projectile(this.x, this.y, [this.victim.x - this.x, this.victim.y - this.y], 0.1, this.victim, 10, this.parentElem));
+        }
+        super.update();
+    }
+}
+
 
 // global variable spam cuz they dont pay me enough
 const tileSize = 50;
@@ -286,7 +357,7 @@ const trashElem = createElem("img", {src: "img/trash.png", width: tileSize, heig
 addEventListener("DOMContentLoaded", () => {
     document.getElementById("playButton").addEventListener("click", () => {
         document.body.style.backgroundImage = "url('img/background.png')";
-        document.getElementById("playScreen").remove();
+        document.getElementById("playScreen").style.display = "none";
         const gameDiv = createElem("div", {}, {position: "absolute", left: "0", top: `${topOffset}px`, overflow: "hidden", display: "block", width: `${tileSize * mapWidth}px`, height: `${tileSize * mapHeight}px`, userSelect: "none"});
         gameDiv.addEventListener("dragstart", event => event.preventDefault());
         gameDiv.appendChild(trashElem);
@@ -298,13 +369,15 @@ addEventListener("DOMContentLoaded", () => {
         }
         const player = new Player(5, 5, gameDiv, new Net(gameDiv, 1, 1), shit);
         let level = 0;
+
+        const projectiles = [];
         
         function gameLoop() {
             player.update();
             if (shit.length === 0) {
                 if (level === 0) {
-                    for (let i = 0; i < Math.floor(Math.random() * 5) + 5; i++) {
-                        shit.push(new MovingShit(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash2.png", "img/trash3.png"]));
+                    for (let i = 0; i < Math.floor(Math.random() * 5) + 1; i++) {
+                        shit.push(new AttackingShit(player, projectiles, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash2.png", "img/trash3.png"]));
                     }
                 }
                 level++;
@@ -313,9 +386,18 @@ addEventListener("DOMContentLoaded", () => {
                 thing.update();
                 return !thing.dead
             });
+            for (const projectile of projectiles) {
+                projectile.update();
+            }
             player.shits = shit;
             window.scrollTo(player.x * tileSize - screen.availWidth / 2, player.y * tileSize - screen.availHeight / 2);
-            requestAnimationFrame(gameLoop);
+            if (player.health <= 0) {
+                alert("you died score 0");
+                gameDiv.remove();
+                document.getElementById("playScreen").style.display = "flex";
+            } else {
+                requestAnimationFrame(gameLoop);
+            }
         }
         requestAnimationFrame(gameLoop);
     });
