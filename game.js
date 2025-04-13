@@ -75,12 +75,11 @@ function angleDiff(one, two) {
 class Entity {
     /**
      * @param x Entity topleft Cartesian X coordinate in tiles
-     * @param Y Entity Y coordinate
-     * @param health Maximum health
+     * @param y Entity Y coordinate
      * @param speed Speed in tiles / frame
      * @param imgSrc Path to this entity's image
      */
-    constructor(x, y, health, speed, imgSrc, parentElem) {
+    constructor(x, y, speed, imgSrc, parentElem) {
         // move them comments into jsdoc
         this.oldX = NaN; // x coordinate from previous frame, used to update image only when necessary
         this.oldY = NaN; // old y coordinate
@@ -88,7 +87,6 @@ class Entity {
         this.x = x;
         this.y = y;
         this.rotation = 0; // rotation in radians
-        this.health = health;
         this.speed = speed;
         this.image = createElem("img", {src: imgSrc, width: tileSize}, {position: "absolute", left: "0", top: "0"});
         // methinks messing with the DOM in an requestAnimationFrame is slow or smth
@@ -102,7 +100,7 @@ class Entity {
         this.x = bound(this.x, 0, mapWidth - 1);
         this.y = bound(this.y, 0, mapHeight - 1);
         // angle threshold arbitrarily chosen
-        if (this.oldX !== this.x || this.oldY !== this.y || angleDiff(this.rotation, this.oldRotation) > Math.PI / 16) {
+        if (this.oldX !== this.x || this.oldY !== this.y || this.rotation !== this.oldRotation) {
             this.image.style.transform = `translate(${this.x * tileSize - tileSize * this.rotationCenter[0] / 100}px, ${this.y * tileSize - this.imgHeight * this.rotationCenter[1] / 100}px) rotate(${this.rotation}rad)`;
         }
         this.oldX = this.x;
@@ -117,7 +115,10 @@ class Entity {
 
 class Player extends Entity {
     constructor(x, y, parentElem, tool, shits) {
-        super(x, y, 100, 0.1, "img/noSwim.png", parentElem);
+        super(x, y, 0.1, "img/noSwim.png", parentElem);
+        this.health = 100;
+        this.healthBar = createElem("meter", {max: 100, width: tileSize, value: this.health}, {position: "absolute", left: "0", top: "0"});
+        this.parentElem.appendChild(this.healthBar);
         this.shits = shits;
         this.tool = tool;
         // they dont pay me enough
@@ -165,13 +166,15 @@ class Player extends Entity {
         this.tool.x = this.x + 0.5;
         this.tool.y = this.y + 0.5;
         this.tool.update();
+        this.healthBar.value = this.health;
+        this.healthBar.style.transform = `translate(${this.x * tileSize}px, ${this.y * tileSize + this.imgHeight}px)`;
         super.update();
     }
 }
 
 class Tool extends Entity {
     constructor(parentElem) {
-        super(-69, -420, 1, 1, "img/placeholder.png", parentElem);
+        super(-69, -420, 1, "img/placeholder.png", parentElem);
         this.shit = [];
         this.maxCapacity = -69;
     }
@@ -229,8 +232,8 @@ class Net extends Tool {
 }
 
 class Shit extends Entity {
-    constructor(x, y, parentElem) {
-        super(x, y, 69, 0, `img/trash${Math.floor(Math.random() * 4) + 1}.png`, parentElem);
+    constructor(x, y, parentElem, trashImgs) {
+        super(x, y, 0.01, trashImgs[Math.floor(Math.random() * trashImgs.length)], parentElem);
         this.value = 1;
         this.update();
         this.dead = false;
