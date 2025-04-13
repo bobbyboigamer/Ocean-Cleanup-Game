@@ -50,7 +50,6 @@ There would be different type of tools you would use to capture the trash monste
  -a big net
  -a seabin
 
-
-Regeneration:
--regenerate your health by 2% per second
+ Regeneration:
+    -regenerate your health by 2% per second
 
