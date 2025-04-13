@@ -230,7 +230,7 @@ class Net extends Tool {
 
 class Shit extends Entity {
     constructor(x, y, parentElem) {
-        super(x, y, 69, 0, "img/placeholder.png", parentElem);
+        super(x, y, 69, 0, `img/trash${Math.floor(Math.random() * 4) + 1}.png`, parentElem);
         this.value = 1;
         this.update();
         this.dead = false;
@@ -280,7 +280,7 @@ addEventListener("DOMContentLoaded", () => {
             player.update();
             if (shit.length === 0) {
                 if (level === 0) {
-                    for (let i = 0; i < Math.floor(Math.random() * 5) + 1; i++) {
+                    for (let i = 0; i < Math.floor(Math.random() * 5) + 5; i++) {
                         shit.push(new MovingShit(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv));
                     }
                 }
