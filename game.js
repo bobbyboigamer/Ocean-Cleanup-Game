@@ -617,7 +617,7 @@ class TheFinalWeapon extends Tool {
         this.fireCooldown = true;
         setTimeout(() => {
             this.fireCooldown = false;
-        }, 5000);
+        }, 5000 * 0.9 ** (Number(localStorage.getItem("coffee") ?? 0));
 
         const startNoise = createElem("audio", {src: "noise/laser_start.mp3"});
         startNoise.play();
@@ -634,7 +634,7 @@ class TheFinalWeapon extends Tool {
                 hit.remove();
             }
             this.endLaser();
-        }, 3000);
+        }, 3000 * 0.9 ** Number(localStorage.getItem("coffee") ?? 0));
     }
 }
 
