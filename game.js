@@ -648,7 +648,7 @@ class Oscar extends Shit {
         this.oilCooldown = 1;
         this.trashCooldown = 300;
         this.shootCooldown = 100;
-        this.health = 20;
+        this.health = 200;
         this.dead = false;
         this.victims = victims;
     }
@@ -741,7 +741,7 @@ addEventListener("DOMContentLoaded", () => {
                     }
                 } else if (level === 1) {
                     for (let i = 0; i < Math.floor(Math.random() * 5) + 5; i++) {
-                        shit.push(new AttackingShit(0.07, 0.02, player, projectiles, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash2.png", "img/trash4.png", "trash5.png"], 2));
+                        shit.push(new AttackingShit(0.07, 0.02, player, projectiles, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash2.png", "img/trash4.png", "img/trash5.png"], 2));
                     }
                 } else if (level == 2) {
                     player.tool.oof();
