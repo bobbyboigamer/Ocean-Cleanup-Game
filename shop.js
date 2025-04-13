@@ -39,7 +39,7 @@ const items = [
     {
         name: "coffee",
         title: "Tool Speed Upgrade",
-        description: "armor",
+        description: "Increase your tool efficency!",
         baseCost: 10,
         costMultiplier: 1.1
     },
