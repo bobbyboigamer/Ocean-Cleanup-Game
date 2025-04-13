@@ -122,9 +122,11 @@ class Entity {
 
 class Player extends Entity {
     constructor(x, y, parentElem, tool, shits) {
-        super(x, y, 0.1, "img/noSwim.png", parentElem);
-        this.health = 100;
-        this.healthBar = createElem("meter", {max: 100, width: tileSize, value: this.health}, {position: "absolute", left: "0", top: "0"});
+        super(x, y, 0.1 * (Number(localStorage.getItem("speed") ?? 0) + 1), "img/noSwim.png", parentElem);
+        this.maxHealth = 100 + 5 * Number(localStorage.getItem("health") ?? 0);
+        this.health = this.maxHealth;
+        this.healthBar = createElem("meter", {max: this.maxHealth, width: tileSize, value: this.maxHealth}, {position: "absolute", left: "0", top: "0"});
+        this.defense = 1 * 0.85 ** Number(localStorage.getItem("armor") ?? 0);
         this.parentElem.appendChild(this.healthBar);
         this.shits = shits;
         this.tool = tool;
@@ -144,6 +146,11 @@ class Player extends Entity {
             this.tool.rotation = Math.atan2((event.pageY - topOffset) / tileSize - this.y - 0.5, event.pageX / tileSize - this.x - 0.5);
         });
         this.money = Number(localStorage.getItem("money")) ?? 0;
+    }
+
+    takeDamage(amount) {
+        amount *= this.defense;
+        this.health = bound(this.health - amount, 0, this.maxHealth);
     }
 
     update() {
