@@ -338,7 +338,7 @@ class Net extends Tool {
 
 class HarpoonGun extends Tool {
     constructor(fireCooldownMs, projectiles, parentElem) {
-        super("../img/harpoon.png", parentElem);
+        super("img/harpoon.png", parentElem);
         this.projectiles = projectiles;
         // this.image.src = "../img/harpoon.png";
         // this.imgHeight = this.image.offsetHeight;
