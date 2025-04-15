@@ -33,7 +33,6 @@ body {
     border-radius: 8px;
     font-weight: bold;
     transition: background-color 0.2s, transform 0.2s;
-    z-index: 100;
 }
 
 #exit:hover {
