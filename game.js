@@ -1,5 +1,15 @@
 // will not separate files for now because no bundler + CORS prevents files from being split into modules
 
+// wow global variables
+let oldScrollX = 0
+let oldScrollY = 0
+/* fakeScroll cuz
+Cannot redeclare block-scoped variable 'scrollX'.ts(2451)
+lib.dom.d.ts(28679, 13): 'scrollX' was also declared here.
+*/
+let fakeScrollX = 0
+let fakeScrollY = 0
+
 function scaleVector(x, y, length) {
     const distance = dist(0, 0, x, y);
     x = x / distance * length;
@@ -113,8 +123,8 @@ class Entity {
     update() {
         this.x = bound(this.x, 0, mapWidth - 1);
         this.y = bound(this.y, 0, mapHeight - 1);
-        if (this.oldX !== this.x || this.oldY !== this.y || this.rotation !== this.oldRotation) {
-            this.image.style.transform = `translate(${this.x * tileSize - this.imgWidth * this.rotationCenter[0] / 100}px, ${this.y * tileSize - this.imgHeight * this.rotationCenter[1] / 100}px) rotate(${this.rotation}rad)`;
+        if (oldScrollX !== fakeScrollX || oldScrollY !== fakeScrollY || this.oldX !== this.x || this.oldY !== this.y || this.rotation !== this.oldRotation) {
+            this.image.style.transform = `translate(${this.x * tileSize - this.imgWidth * this.rotationCenter[0] / 100 - fakeScrollX}px, ${this.y * tileSize - this.imgHeight * this.rotationCenter[1] / 100 - fakeScrollY}px) rotate(${this.rotation}rad)`;
         }
         this.oldX = this.x;
         this.oldY = this.y;
@@ -203,10 +213,12 @@ class Player extends Entity {
         }
         if ((this.x !== this.oldX || this.y !== this.oldY) && !isNaN(this.oldX) && !isNaN(this.oldY)) {
             this.rotation = Math.atan2(this.y - this.oldY, this.x - this.oldX);
-            if (!this.boat) {
+            // gotta find some better way to track image source
+            // pretty sure getting image.src is hella slow
+            if (!this.boat && this.image.src !== "img/swimRight.png") {
                 this.image.src = "img/swimRight.png";
             }
-        } else if (!this.boat) {
+        } else if (!this.boat && this.image.src !== "img/noSwim.png") {
             this.image.src = "img/noSwim.png";
         }
         if (dist(this.x, this.y, trashPos[0], trashPos[1]) < 2 && this.tool.shit.length > 0) {
@@ -223,7 +235,7 @@ class Player extends Entity {
         this.tool.y = this.y + 0.5;
         this.tool.update();
         this.healthBar.value = this.health;
-        this.healthBar.style.transform = `translate(${this.x * tileSize - this.imgWidth * this.rotationCenter[0] / 100}px, ${this.y * tileSize + this.imgHeight}px)`;
+        this.healthBar.style.transform = `translate(${this.x * tileSize - this.imgWidth * this.rotationCenter[0] / 100 - fakeScrollX}px, ${this.y * tileSize + this.imgHeight - fakeScrollY}px)`;
         super.update();
     }
 
@@ -756,7 +768,11 @@ addEventListener("DOMContentLoaded", () => {
                 projectile.update();
             }
             player.shits = shit;
-            window.scrollTo(player.x * tileSize - screen.availWidth / 2, player.y * tileSize - screen.availHeight / 2);
+            oldScrollX = fakeScrollX;
+            oldScrollY = fakeScrollY;
+            fakeScrollX = Math.max(0, player.x * tileSize - screen.availWidth / 2);
+            fakeScrollY = Math.max(0, player.y * tileSize - screen.availHeight / 2);
+            console.log(fakeScrollX)
             if (player.health <= 0) {
                 playAudio("noise/oof.mp3");
                 idkAlert("you died score 0");
