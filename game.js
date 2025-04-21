@@ -715,17 +715,20 @@ addEventListener("DOMContentLoaded", () => {
         const projectiles = [];
         const tool = localStorage.getItem("harpoon") ? new HarpoonGun(1000 * 0.9 ** (Number(localStorage.getItem("coffee") ?? 0)), projectiles, gameDiv) : new Net(gameDiv, 1, 1);
         const player = new Player(5, 5, gameDiv, tool, shit);
-        for (let i = 0; i < Math.floor(Math.random() * 10) + 10; i++) {
-            shit.push(new MovingShit(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash1.png", "img/trash3.png"]));
-            projectiles.push(new Oil(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), [player], 10, gameDiv));
-        }
-        let level = 0;
+        let level = -1;
         
         function gameLoop() {
             player.update();
             if (shit.length === 0) {
-                idkAlert("You are now on level " + (level + 1));
-                if (level === 0) {
+                if (-1 < level && level < 2) {
+                    idkAlert("You are now on level " + (level + 1));
+                }
+                if (level === -1) {
+                    for (let i = 0; i < Math.floor(Math.random() * 10) + 10; i++) {
+                        shit.push(new MovingShit(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash1.png", "img/trash3.png"]));
+                        projectiles.push(new Oil(Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), [player], 10, gameDiv));
+                    }
+                } else if (level === 0) {
                     for (let i = 0; i < Math.floor(Math.random() * 5) + 5; i++) {
                         shit.push(new AttackingShit(0.05, 0, player, projectiles, Math.floor(Math.random() * mapWidth), Math.floor(Math.random() * mapHeight), gameDiv, ["img/trash2.png", "img/trash4.png", "img/trash6.png"], 2));
                     }
