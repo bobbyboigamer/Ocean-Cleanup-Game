@@ -705,7 +705,7 @@ addEventListener("DOMContentLoaded", () => {
         }
         document.body.style.backgroundImage = "url('img/background.png')";
         document.getElementById("playScreen").style.display = "none";
-        const gameDiv = createElem("div", {}, {position: "absolute", left: "0", top: `${topOffset}px`, overflow: "hidden", display: "block", width: `${tileSize * mapWidth}px`, height: `${tileSize * mapHeight}px`, userSelect: "none", border: "solid 5px black"});
+        const gameDiv = createElem("div", {}, {position: "absolute", left: "0", top: `${topOffset}px`, overflow: "hidden", display: "block", width: `${tileSize * mapWidth}px`, height: `${tileSize * mapHeight}px`, userSelect: "none"});
         gameDiv.appendChild(createElem("audio", {src: "noise/ocean.mp3", loop: true, autoplay: true, }))
         gameDiv.addEventListener("dragstart", event => event.preventDefault());
         gameDiv.appendChild(trashElem);
