@@ -79,6 +79,12 @@ function angleDiff(one, two) {
     return mod((one - two) + Math.PI, 2 * Math.PI) - Math.PI;
 }
 
+function playAudio(src) {
+    const audioElem = createElem("audio", {src: src});
+    audioElem.play();
+    audioElem.remove();
+}
+
 class Entity {
     /**
      * @param x Entity topleft Cartesian X coordinate in tiles
@@ -176,9 +182,7 @@ class Player extends Entity {
     takeDamage(amount) {
         amount *= this.defense;
         this.health = bound(this.health - amount, 0, this.maxHealth);
-        const damageNoise = createElem("audio", {src: `noise/hit${Math.floor(Math.random() * 3) + 1}.mp3`});
-        damageNoise.play();
-        damageNoise.remove();
+        playAudio(`noise/hit${Math.floor(Math.random() * 3) + 1}.mp3`);
     }
 
     update() {
@@ -213,9 +217,7 @@ class Player extends Entity {
             localStorage.setItem("money", this.money);
             document.getElementById("trashCounter").textContent = `Trash: ${this.money}`;
 
-            const noise = createElem("audio", {src: "noise/emptyTrash.mp3"});
-            noise.play();
-            noise.remove();
+            playAudio("noise/emptyTrash.mp3");
         }
         this.tool.x = this.x + 0.5;
         this.tool.y = this.y + 0.5;
@@ -327,9 +329,7 @@ class Net extends Tool {
             if (dist(netPos[0], netPos[1], shit.x, shit.y) <= this.grabRadius && !shit.dead) {
                 this.shit.push(shit)
                 shit.oof();
-                const pickupNoise = createElem("audio", {src: "noise/pickup.mp3"});
-                pickupNoise.play();
-                pickupNoise.remove();
+                playAudio("noise/pickup.mp3");
                 return;
             }
         }
@@ -356,9 +356,7 @@ class HarpoonGun extends Tool {
         }
         this.fire = false;
 
-        const noise = createElem("audio", {src: "noise/harpoon.mp3"});
-        noise.play();
-        noise.remove();
+        playAudio("noise/harpoon.mp3");
 
         setTimeout(() => {
             this.fire = true;
@@ -439,9 +437,7 @@ class Harpoon extends Entity {
             if (dist(this.x, this.y, victim.x, victim.y) < 1 && !victim.dead) {
                 this.onAttack(victim);
                 this.oof();
-                const pickupNoise = createElem("audio", {src: "noise/pickup.mp3"});
-                pickupNoise.play();
-                pickupNoise.remove();
+                playAudio("noise/pickup.mp3");
                 return;
             }
         }
@@ -619,9 +615,7 @@ class TheFinalWeapon extends Tool {
             this.fireCooldown = false;
         }, 5000 * 0.9 ** (Number(localStorage.getItem("coffee") ?? 0)));
 
-        const startNoise = createElem("audio", {src: "noise/laser_start.mp3"});
-        startNoise.play();
-        startNoise.remove();
+        playAudio("noise/laser_start.mp3");
 
         this.loopNoise = createElem("audio", {src: "noise/laser_loop.mp3", loop: true});
         this.loopNoise.play();
@@ -629,9 +623,7 @@ class TheFinalWeapon extends Tool {
         this.timeout = setTimeout(() => {
             if (this.hitOscar) {
                 this.oscar.health -= 10;
-                const hit = createElem("audio", {src: `noise/oscar/hit${Math.floor(Math.random() * 4) + 1}.mp3`});
-                hit.play();
-                hit.remove();
+                playAudio(`noise/oscar/hit${Math.floor(Math.random() * 4) + 1}.mp3`);
             }
             this.endLaser();
         }, 3000 * 0.9 ** Number(localStorage.getItem("coffee") ?? 0));
@@ -687,9 +679,7 @@ class Oscar extends Shit {
     }
 
     oof() {
-        const die = createElem("audio", {src: "noise/oscar/end.mp3"});
-        die.play();
-        die.remove();
+        playAudio("noise/oscar/end.mp3");
         super.oof();
     }
 }
@@ -748,9 +738,7 @@ addEventListener("DOMContentLoaded", () => {
                     }
                 } else if (level == 2) {
                     player.tool.oof();
-                    const spawn = createElem("audio", {src: "noise/oscar/spawn.mp3"});
-                    spawn.play();
-                    spawn.remove();
+                    playAudio("noise/oscar/spawn.mp3");
                     const oscar = new Oscar(Math.floor(Math.random() * (mapWidth - 5)), Math.floor(Math.random() * (mapHeight - 5)), [player], gameDiv, projectiles);
                     player.tool = new TheFinalWeapon(oscar, gameDiv);
                     shit.push(oscar);
@@ -767,9 +755,7 @@ addEventListener("DOMContentLoaded", () => {
             player.shits = shit;
             window.scrollTo(player.x * tileSize - screen.availWidth / 2, player.y * tileSize - screen.availHeight / 2);
             if (player.health <= 0) {
-                const oof = createElem("audio", {src: "noise/oof.mp3"});
-                oof.play();
-                oof.remove();
+                playAudio("noise/oof.mp3");
                 idkAlert("you died score 0");
                 localStorage.clear();
                 cleanUp();
