@@ -174,7 +174,7 @@ class Player extends Entity {
         })
         // im sure throwing this shit in an event listener will have absolutely no problems with rotation change detection in update()
         this.parentElem.addEventListener("mousemove", event => {
-            this.tool.rotation = Math.atan2((event.pageY - topOffset) / tileSize - this.y - 0.5, event.pageX / tileSize - this.x - 0.5);
+            this.tool.rotation = Math.atan2((event.pageY - topOffset + fakeScrollY) / tileSize - this.y - 0.5, (event.pageX + fakeScrollX) / tileSize - this.x - 0.5);
         });
         this.money = Number(localStorage.getItem("money")) ?? 0;
         if (boatNum > 0) {
@@ -727,10 +727,12 @@ addEventListener("DOMContentLoaded", () => {
         const projectiles = [];
         const tool = localStorage.getItem("harpoon") ? new HarpoonGun(1000 * 0.9 ** (Number(localStorage.getItem("coffee") ?? 0)), projectiles, gameDiv) : new Net(gameDiv, 1, 1);
         const player = new Player(5, 5, gameDiv, tool, shit);
-        let level = -1;
+        let level = 1;
         
         function gameLoop() {
             player.update();
+            trashElem.style.left = -fakeScrollX + "px";
+            trashElem.style.top = -fakeScrollY + "px";
             if (shit.length === 0) {
                 if (-1 < level && level < 2) {
                     idkAlert("You are now on level " + (level + 1));
@@ -789,7 +791,6 @@ addEventListener("DOMContentLoaded", () => {
         function cleanUp() {
             gameDiv.remove();
             document.getElementById("playScreen").style.display = "flex";
-            document.getElementById("trashCounter").textContent = "Trash: 0";
             document.body.style.backgroundImage = "url('img/pixil-frame-0.png')";
             localStorage.removeItem("startTime");
             document.getElementById("timer-display").textContent = "0 : 0 : 0";
