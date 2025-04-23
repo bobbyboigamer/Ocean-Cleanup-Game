@@ -642,11 +642,12 @@ class TheFinalWeapon extends Tool {
     }
 }
 
-class Oscar extends Shit {
+class Oscar extends MovingShit {
     static size = 3
     
     constructor(x, y, victims, parentElem, projectiles) {
-        super(x, y, 0.1, parentElem, ["img/oscar.png"], 5);
+        super(x, y, parentElem, ["img/oscar.png"], 5);
+        // super(x, y, 0.1, parentElem, ["img/oscar.png"], 5);
         this.image.width = Oscar.size * tileSize;
         this.imgWidth *= Oscar.size;
         this.imgHeight *= Oscar.size;
@@ -661,7 +662,7 @@ class Oscar extends Shit {
     }
 
     findDestination() {
-        return [bound(this.x + Oscar.size / 2 + Math.floor(Math.random() * 20) - 10, 0, mapWidth), bound(this.y + Oscar.size / 2 + Math.floor(Math.random() * 20) - 10, 0, mapHeight)];
+        return [bound(this.x + Oscar.size / 2 + Math.random() * 20 - 10, 0, mapWidth), bound(this.y + Oscar.size / 2 + Math.random() * 20 - 10, 0, mapHeight)];
     }
     
     update() {
@@ -676,7 +677,7 @@ class Oscar extends Shit {
         this.trashCooldown--;
         if (this.trashCooldown <= 0) {
             this.trashCooldown = 300;
-            this.shits.push(new AttackingShit(0.05, 0, this.victims[0], this.projectiles, ...this.findDestination(), this.parentElem, [1, 2, 3, 4, 5, 6].map(number => `img/trash${number}.png`), 1));
+            this.shits.push(new AttackingShit(0.1, 0, this.victims[0], this.projectiles, ...this.findDestination(), this.parentElem, [1, 2, 3, 4, 5, 6].map(number => `img/trash${number}.png`), 1));
         }
         this.shootCooldown--;
         if (this.shootCooldown <= 0) {
@@ -727,7 +728,7 @@ addEventListener("DOMContentLoaded", () => {
         const projectiles = [];
         const tool = localStorage.getItem("harpoon") ? new HarpoonGun(1000 * 0.9 ** (Number(localStorage.getItem("coffee") ?? 0)), projectiles, gameDiv) : new Net(gameDiv, 1, 1);
         const player = new Player(5, 5, gameDiv, tool, shit);
-        let level = 1;
+        let level = 2;
         
         function gameLoop() {
             player.update();
@@ -774,7 +775,6 @@ addEventListener("DOMContentLoaded", () => {
             oldScrollY = fakeScrollY;
             fakeScrollX = Math.max(0, player.x * tileSize - screen.availWidth / 2);
             fakeScrollY = Math.max(0, player.y * tileSize - screen.availHeight / 2);
-            console.log(fakeScrollX)
             if (player.health <= 0) {
                 playAudio("noise/oof.mp3");
                 idkAlert("you died score 0");
