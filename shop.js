@@ -98,13 +98,30 @@ for (const item of items) {
         localStorage.setItem(item.name, level);
         item.currentLevel = level;
         money -= cost;
+        // this is so dumb and they dont pay me enough i want to kill myself what am i doing
+        const oldMoneyWasted = Number(localStorage.getItem("moneyWasted") ?? 0)
+        localStorage.setItem("moneyWasted", oldMoneyWasted + cost);
+        console.log(oldMoneyWasted, oldMoneyWasted + cost)
+        if (oldMoneyWasted < 1000 && oldMoneyWasted + cost > 1000) {
+            doAchievement("Rockefeller", "../img/rockefeller.jpg");
+        }
         localStorage.setItem("money", money);
         document.getElementById("trashCounter").textContent = `Trash: ${money}`;
-        document.querySelector(`#${item.name} .price`).textContent = `Cost: ${Math.round(cost * item.costMultiplier ** level)}`;
+        document.querySelector(`#${item.name} .price`).textContent = `Cost: ${Math.round(cost * item.costMultiplier)}`;
         const kaching = createElem("audio", {src: "../noise/kaching.mp3"});
         kaching.play();
         kaching.remove();
     })
     shopItem.classList.add("shopItem");
     shopItems.appendChild(shopItem);
+}
+
+function doAchievement(name, imgSrc) {
+    document.getElementById("achievementName").textContent = name;
+    document.getElementById("achievementImg").src = imgSrc;
+    document.getElementById("achievement").style.right = "0";
+    setTimeout(() => document.getElementById("achievement").style.right = "-300px", 4000);
+    const audio = createElem("audio", {src: "../noise/challenge.mp3"});
+    audio.play();
+    audio.remove();
 }
