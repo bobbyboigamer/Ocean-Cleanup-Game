@@ -21,6 +21,7 @@ body {
     font-size: 72px;
     text-shadow: 0 0 10px rgba(0, 123, 255, 0.7), 0 0 20px rgba(0, 123, 255, 0.5);
     letter-spacing: 2px;
+    color: white;
 }
 
 button, a {

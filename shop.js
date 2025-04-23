@@ -117,10 +117,11 @@ for (const item of items) {
 }
 
 function doAchievement(name, imgSrc) {
+    localStorage.setItem(`achievement${name}`, "../img/rockefeller.jpg");
     document.getElementById("achievementName").textContent = name;
     document.getElementById("achievementImg").src = imgSrc;
-    document.getElementById("achievement").style.right = "0";
-    setTimeout(() => document.getElementById("achievement").style.right = "-300px", 4000);
+    document.getElementById("achievementNotif").style.right = "0";
+    setTimeout(() => document.getElementById("achievementNotif").style.right = "-300px", 4000);
     const audio = createElem("audio", {src: "../noise/challenge.mp3"});
     audio.play();
     audio.remove();
