@@ -104,7 +104,7 @@ class Player extends Entity {
         this.parentElem.addEventListener("mousemove", event => {
             this.tool.rotation = Math.atan2(((event as MouseEvent).pageY - topOffset + fakeScrollY) / tileSize - this.y - 0.5, ((event as MouseEvent).pageX + fakeScrollX) / tileSize - this.x - 0.5);
         });
-        this.money = Number(localStorage.getItem("money")) ?? 0;
+        this.money = Number(localStorage.getItem("money") ?? 0);
         if (boatNum > 0) {
             this.rotationCenter = [50, 50];
             this.imgHeight = this.image.offsetHeight;
@@ -757,9 +757,9 @@ addEventListener("DOMContentLoaded", () => {
 
 function dLev(one: string, two: string) {
     let alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890- \'.,';
-    let da = new Array(alphabet.length).fill(0);
-    let matrix = new Array(one.length + 2).fill(0).map(() => new Array(two.length + 2).fill(0));
-    let maxDist = one.length + two.length;
+    const da = new Array(alphabet.length).fill(0);
+    const matrix = new Array(one.length + 2).fill(0).map(() => new Array(two.length + 2).fill(0));
+    const maxDist = one.length + two.length;
     matrix[0][0] = maxDist;
     for (let i = 0; i <= one.length; i++) {
         if (i > 0 && alphabet.indexOf(one[i - 1]) === -1) {
@@ -780,8 +780,8 @@ function dLev(one: string, two: string) {
     for (let i = 1; i <= one.length; i++) {
         let db = 0;
         for (let j = 1; j <= two.length; j++) {
-            let k = da[alphabet.indexOf(two[j - 1])];
-            let l = db;
+            const k = da[alphabet.indexOf(two[j - 1])];
+            const l = db;
             let cost = 1;
             if (one[i - 1] === two[j - 1]) {
                 cost = 0;
