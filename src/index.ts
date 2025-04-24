@@ -680,7 +680,7 @@ addEventListener("DOMContentLoaded", () => {
         const projectiles: Entity[] = [];
         const tool = localStorage.getItem("harpoon") ? new HarpoonGun(1000 * 0.9 ** (Number(localStorage.getItem("coffee") ?? 0)), projectiles, gameDiv) : new Net(gameDiv, 1, 1);
         const player = new Player(5, 5, gameDiv, tool, shit);
-        let level = 2;
+        let level = -1;
         
         function gameLoop() {
             player.update();
