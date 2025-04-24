@@ -1,4 +1,4 @@
-// will not separate files for now because no bundler + CORS prevents files from being split into modules
+import { angleDiff, bound, createElem, dist, playAudio, polarToCartesian, scaleVector } from "./randomShit"
 
 // wow global variables
 let oldScrollX = 0
@@ -10,110 +10,30 @@ lib.dom.d.ts(28679, 13): 'scrollX' was also declared here.
 let fakeScrollX = 0
 let fakeScrollY = 0
 
-function scaleVector(x, y, length) {
-    const distance = dist(0, 0, x, y);
-    x = x / distance * length;
-    y = y / distance * length;
-    return [x, y];
-}
-
-/**
- * Modulus. Like remainder but also for negative numbers.
- * mod(420, 69) = 6; mod(-69, 420) = 351;
- * @param num Dividend
- * @param divisor Divisor
- * @returns Mod
- */
-function mod(num, divisor) {
-    return ((num % divisor) + divisor) % divisor;
-}
-
-/**
- * Create an element but stupid
- * @param type Type of element
- * @param properties Element properties set using regular object properties
- * @param children List of element's childrens, added with appendChild
- * @return Element
- */
-function createElem(type, properties = {}, styles = {}, ...children) {
-    const elem = document.createElement(type);
-    Object.assign(elem, properties);
-    Object.assign(elem.style, styles);
-    for (const child of children) {
-        elem.appendChild(child);
-    }
-    return elem;
-}
-
-/**
- * Bound a number between min and max
- * @value value to bound
- * @min minimum
- * @max maximum
- * @return bounded value
- */
-function bound(value, min, max) {
-    return Math.max(Math.min(value, max), min);
-}
-
-/**
- * Polar coordinates to cartesian coordinates
- * @param r Radius
- * @param theta Angle in radians, including coterminal
- * @returns Cartesian [x, y]
- */
-function polarToCartesian(radius, rotation) {
-    return [Math.cos(rotation) * radius, Math.sin(rotation) * radius];
-}
-
-/**
- * Distance between two cartesian points using pythagorean theorems.
- * @param x1 X coordinate of first point
- * @param y1 Y coordinate of first point
- * @param x2 X coordinate of second point
- * @param y2 Y coordinate of second point
- * @returns Distance
- */
-function dist(x1, y1, x2, y2) {
-    return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-}
-
-/**
- * Angle between two radian points. May handle negatives. Will not handle coterminal angles.
- * @param one First radian angle
- * @param two Second radian angle
- * @returns Possibly negative difference in radians
- */
-function angleDiff(one, two) {
-    // dont ask me what this is
-    return mod((one - two) + Math.PI, 2 * Math.PI) - Math.PI;
-}
-
-function playAudio(src) {
-    const audioElem = createElem("audio", {src: src});
-    audioElem.play();
-    audioElem.remove();
-}
-
 class Entity {
+    oldX = NaN
+    oldY = NaN
+    oldRotation = 0
+    rotation = 0
+    image: HTMLImageElement
+    rotationCenter = [0, 0]
+    imgHeight: number
+    imgWidth: number
+
     /**
      * @param x Entity topleft Cartesian X coordinate in tiles
      * @param y Entity Y coordinate
      * @param speed Speed in tiles / frame
      * @param imgSrc Path to this entity's image
      */
-    constructor(x, y, speed, imgSrc, parentElem, size = 1) {
+    constructor(public x: number, public y: number, public speed: number, imgSrc: string, public parentElem: Node, size = 1) {
         // move them comments into jsdoc
         this.oldX = NaN; // x coordinate from previous frame, used to update image only when necessary
         this.oldY = NaN; // old y coordinate
         this.oldRotation = 0; // old rotation
-        this.x = x;
-        this.y = y;
         this.rotation = 0; // rotation in radians
-        this.speed = speed;
-        this.image = createElem("img", {src: imgSrc, width: size * tileSize}, {position: "absolute", left: "0", top: "0"});
+        this.image = createElem("img", {src: imgSrc, width: size * tileSize}, {position: "absolute", left: "0", top: "0"}) as HTMLImageElement;
         // methinks messing with the DOM in an requestAnimationFrame is slow or smth
-        this.parentElem = parentElem;
         this.parentElem.appendChild(this.image);
         this.rotationCenter = [0, 0]
         this.imgHeight = this.image.offsetHeight;
@@ -144,12 +64,15 @@ addEventListener("keydown", event => {
 addEventListener("keyup", event => {
     keys.set(event.key.toLowerCase(), false);
 });
-function idkAlert(message) {
+
+// have to make this shitty alert function because holding down a key when an alert shows up will stop the key from holding down without firing a keyup event
+function idkAlert(message: string) {
     for (const key of keys.keys()) {
         keys.set(key, false);
     }
     alert(message);
 }
+
 window.addEventListener("blur", () => {
     for (const key of keys.keys()) {
         keys.set(key, false);
@@ -157,24 +80,29 @@ window.addEventListener("blur", () => {
 });
 
 class Player extends Entity {
-    constructor(x, y, parentElem, tool, shits) {
-        const boats = [["img/noSwim.png", 1], ["img/lvl2boat.png", 3], ["img/jetski.png", 1]];
-        const boatNum = bound(Number(localStorage.getItem("boat") ?? 0), 0, boats.length - 1);
-        super(x, y, 0.1 * (Number(localStorage.getItem("speed") ?? 0) + 1) + 0.05 * boatNum, boats[boatNum][0], parentElem, boats[boatNum][1]);
+    static boats: [string, number][] = [["img/noSwim.png", 1], ["img/lvl2boat.png", 3], ["img/jetski.png", 1]];
+    boat: boolean
+    maxHealth: number
+    health: number
+    healthBar: HTMLProgressElement
+    defense: number
+    money: number
+
+    constructor(x: number, y: number, parentElem: Node, public tool: Tool, public shits: Shit[]) {
+        const boatNum = bound(Number(localStorage.getItem("boat") ?? 0), 0, Player.boats.length - 1);
+        super(x, y, 0.1 * (Number(localStorage.getItem("speed") ?? 0) + 1) + 0.05 * boatNum, Player.boats[boatNum][0], parentElem, Player.boats[boatNum][1]);
         this.boat = boatNum > 0;
         this.maxHealth = 100 + 5 * Number(localStorage.getItem("health") ?? 0);
         this.health = this.maxHealth;
-        this.healthBar = createElem("meter", {max: this.maxHealth, width: tileSize, value: this.maxHealth}, {position: "absolute", left: "0", top: "0"});
+        this.healthBar = createElem("meter", {max: this.maxHealth, width: tileSize, value: this.maxHealth}, {position: "absolute", left: "0", top: "0"}) as HTMLProgressElement;
         this.defense = 1 * 0.85 ** Number(localStorage.getItem("armor") ?? 0);
         this.parentElem.appendChild(this.healthBar);
-        this.shits = shits;
-        this.tool = tool;
         parentElem.addEventListener("click", () => {
             this.tool.grabShit(this.shits);
         })
         // im sure throwing this shit in an event listener will have absolutely no problems with rotation change detection in update()
         this.parentElem.addEventListener("mousemove", event => {
-            this.tool.rotation = Math.atan2((event.pageY - topOffset + fakeScrollY) / tileSize - this.y - 0.5, (event.pageX + fakeScrollX) / tileSize - this.x - 0.5);
+            this.tool.rotation = Math.atan2(((event as MouseEvent).pageY - topOffset + fakeScrollY) / tileSize - this.y - 0.5, ((event as MouseEvent).pageX + fakeScrollX) / tileSize - this.x - 0.5);
         });
         this.money = Number(localStorage.getItem("money")) ?? 0;
         if (boatNum > 0) {
@@ -189,7 +117,7 @@ class Player extends Entity {
         }, 1000 * 0.9 ** Number(localStorage.getItem("regen") ?? 0))
     }
 
-    takeDamage(amount) {
+    takeDamage(amount: number) {
         amount *= this.defense;
         this.health = bound(this.health - amount, 0, this.maxHealth);
         playAudio(`noise/hit${Math.floor(Math.random() * 3) + 1}.mp3`);
@@ -226,8 +154,8 @@ class Player extends Entity {
                 this.promptQuestion();
             }
             this.money += this.tool.depositShit();
-            localStorage.setItem("money", this.money);
-            document.getElementById("trashCounter").textContent = `Trash: ${this.money}`;
+            localStorage.setItem("money", String(this.money));
+            trashCounter.textContent = `Trash: ${this.money}`;
 
             playAudio("noise/emptyTrash.mp3");
         }
@@ -288,14 +216,17 @@ class Player extends Entity {
 }
 
 class Tool extends Entity {
-    constructor(imgSrc, parentElem) {
+    shit: Shit[]
+    maxCapacity: number
+
+    constructor(imgSrc: string, parentElem: Node) {
         super(-69, -420, 1, imgSrc, parentElem);
         this.shit = [];
         this.maxCapacity = 1 + Number(localStorage.getItem("capacity") ?? 0);
-        this.image.style.zIndex = 1;
+        this.image.style.zIndex = "1";
     }
 
-    grabShit() {
+    grabShit(_: Shit[]) {
         throw new Error("override this you idiot")
     }
 
@@ -319,17 +250,13 @@ class Tool extends Entity {
 }
 
 class Net extends Tool {
-    constructor(parentElem, grabberLength, grabRadius) {
+    constructor(parentElem: Node, private grabberLength: number, private grabRadius: number) {
         super("img/net.png", parentElem);
-        // this.image.src = "img/net.png";
-        // this.imgHeight = this.image.offsetHeight
-        this.grabberLength = grabberLength;
-        this.grabRadius = grabRadius;
         this.rotationCenter = [0, 18];
         this.image.style.transformOrigin = `${this.rotationCenter[0]}% ${this.rotationCenter[1]}%`
     }
 
-    grabShit(shits) {
+    override grabShit(shits: Shit[]) {
         if (this.shit.length >= this.maxCapacity) {
             idkAlert("You can't hold more trash. Drop off your trash at the trash can.");
             return;
@@ -349,16 +276,13 @@ class Net extends Tool {
 }
 
 class HarpoonGun extends Tool {
-    constructor(fireCooldownMs, projectiles, parentElem) {
+    fire = true
+
+    constructor(private fireCooldownMs: number, private projectiles: {update(): void}[], parentElem: Node) {
         super("img/harpoon.png", parentElem);
-        this.projectiles = projectiles;
-        // this.image.src = "../img/harpoon.png";
-        // this.imgHeight = this.image.offsetHeight;
-        this.fireCooldownMs = fireCooldownMs;
-        this.fire = true;
     }
 
-    grabShit(shits) {
+    grabShit(shits: Shit[]) {
         if (!this.fire) {
             return;
         }
@@ -381,10 +305,10 @@ class HarpoonGun extends Tool {
 }
 
 class Shit extends Entity {
-    constructor(x, y, speed, parentElem, trashImgs, value = 1) {
+    dead = false
+
+    constructor(x: number, y: number, speed: number, parentElem: Node, trashImgs: string[], public value = 1) {
         super(x, y, speed, trashImgs[Math.floor(Math.random() * trashImgs.length)], parentElem);
-        this.value = value;
-        this.dead = false;
     }
 
     oof() {
@@ -393,11 +317,22 @@ class Shit extends Entity {
     }
 }
 
+enum Direction {
+    up,
+    down,
+    left,
+    right,
+}
+const directions: Direction[] = [Direction.up, Direction.down, Direction.left, Direction.right];
+
 class MovingShit extends Shit {
-    constructor(x, y, parentElem, trashImgs, value = 1) {
+    driftDirection: Direction
+    driftCounter = 0
+    maxDriftFrames: number
+
+    constructor(x: number, y: number, parentElem: Node, trashImgs: string[], value = 1) {
         super(x, y, 0.01, parentElem, trashImgs, value);
-        this.driftDirection = ["up", "down", "left", "right"][Math.floor(Math.random() * 4)];
-        this.driftCounter = 0;
+        this.driftDirection = directions[Math.floor(Math.random() * directions.length)];
         this.maxDriftFrames = Math.floor(Math.random() * 300);
     }
 
@@ -405,19 +340,19 @@ class MovingShit extends Shit {
         if (this.dead) {
             return;
         }
-        if (this.driftDirection === "up") {
+        if (this.driftDirection === Direction.up) {
             this.y -= this.speed;
-        } else if (this.driftDirection === "down") {
+        } else if (this.driftDirection === Direction.down) {
             this.y += this.speed;
-        } else if (this.driftDirection === "left") {
+        } else if (this.driftDirection === Direction.left) {
             this.x -= this.speed;
-        } else if (this.driftDirection === "right") {
+        } else if (this.driftDirection === Direction.right) {
             this.x += this.speed;
         }
         this.driftCounter++;
         if (this.driftCounter >= this.maxDriftFrames) {
             this.driftCounter = 0;
-            this.driftDirection = ["up", "down", "left", "right"][Math.floor(Math.random() * 4)];
+            this.driftDirection = directions[Math.floor(Math.random() * directions.length)];
             this.maxDriftFrames = Math.floor(Math.random() * 300);
         }
         super.update();
@@ -425,14 +360,14 @@ class MovingShit extends Shit {
 }
 
 class Harpoon extends Entity {
-    constructor(x, y, moveVector, speed, victims, parentElem, onAttack) {
+    moveVector: [number, number]
+    dead = false
+
+    constructor(x: number, y: number, moveVector: [number, number], speed: number, private victims: Shit[], parentElem: Node, private onAttack: (shit: Shit) => void) {
         super(x, y, speed, "img/harpoonProjectile.png", parentElem);
         this.rotation = Math.atan2(moveVector[1], moveVector[0]);
         this.moveVector = scaleVector(moveVector[0], moveVector[1], speed);
         this.rotationCenter = [0, 50];
-        this.victims = victims;
-        this.dead = false;
-        this.onAttack = onAttack;
     }
 
     update() {
@@ -463,7 +398,10 @@ class Harpoon extends Entity {
 }
 
 class TrashProjectile extends Entity {
-    constructor(x, y, moveVector, speed, victims, damage, parentElem, onAttack = victim => victim.takeDamage(damage)) {
+    moveVector: [number, number]
+    dead = false
+    
+    constructor(x: number, y: number, moveVector: [number, number], speed: number, private victims: Player[], public damage: number, parentElem: Node, private onAttack = (victim: Player) => victim.takeDamage(damage)) {
         let imgSrc = "";
         if (Math.abs(moveVector[0]) > Math.abs(moveVector[1])) {
             if (moveVector[0] < 0) {
@@ -479,11 +417,7 @@ class TrashProjectile extends Entity {
             }
         }
         super(x, y, speed, imgSrc, parentElem);
-        this.victims = victims;
-        this.damage = damage;
         this.moveVector = scaleVector(moveVector[0], moveVector[1], this.speed);
-        this.dead = false;
-        this.onAttack = onAttack;
     }
 
     update() {
@@ -513,12 +447,11 @@ class TrashProjectile extends Entity {
 }
 
 class AttackingShit extends Shit {
-    constructor(projectileSpeed, speed, victim, projectiles, x, y, parentElem, trashImgs, value = 1) {
+    attackCooldown: number
+
+    constructor(private projectileSpeed: number, speed: number, private victim: Player, private projectiles: Entity[], x: number, y: number, parentElem: Node, trashImgs: string[], value = 1) {
         super(x, y, speed, parentElem, trashImgs, value);
-        this.victim = victim;
         this.attackCooldown = Math.floor(Math.random() * 300) + 300;
-        this.projectiles = projectiles;
-        this.projectileSpeed = projectileSpeed
     }
 
     update() {
@@ -541,11 +474,10 @@ class AttackingShit extends Shit {
 }
 
 class Oil extends Entity {
-    constructor(x, y, victims, damage, parentElem) {
+    damaged = false;
+
+    constructor(x: number, y: number, private victims: Player[], private damage: number, parentElem: Node) {
         super(x, y, 0, "img/oil.png", parentElem);
-        this.damage = damage;
-        this.victims = victims;
-        this.damaged = false;
     }
 
     update() {
@@ -564,25 +496,25 @@ class Oil extends Entity {
 }
 
 class TheFinalWeapon extends Tool {
-    constructor(oscar, parentElem) {
+    fireCooldown = false;
+    timeout = NaN;
+    loopNoise: HTMLAudioElement | undefined = undefined
+    hitOscar = false;
+
+    constructor(public oscar: Oscar, parentElem: Node) {
         super("img/thefinalweapon.png", parentElem);
         this.image.style.width = "auto";
         this.image.height = 2 * tileSize;
-        this.image.imgHeight = this.image.offsetHeight;
-        this.image.imgWidth = this.image.offsetWidth;
-        this.oscar = oscar;
-        this.fireCooldown = false;
+        this.imgHeight = this.image.offsetHeight;
+        this.imgWidth = this.image.offsetWidth;
         this.image.style.transformOrigin = "0 50%";
         this.rotationCenter = [0, 50];
-        this.timeout = NaN;
-        this.loopNoise = undefined;
-        this.hitOscar = false;
     }
     
     endLaser() {
         this.image.src = "img/thefinalweapon.png";
-        this.image.imgHeight = this.image.offsetHeight;
-        this.image.imgWidth = this.image.offsetWidth;
+        this.imgHeight = this.image.offsetHeight;
+        this.imgWidth = this.image.offsetWidth;
         if (this.loopNoise !== undefined) {
             this.loopNoise.loop = false;
             this.loopNoise.pause();
@@ -620,8 +552,8 @@ class TheFinalWeapon extends Tool {
             return;
         }
         this.image.src = "img/finalweaponlaser.png";
-        this.image.imgHeight = this.image.offsetHeight;
-        this.image.imgWidth = this.image.offsetWidth;
+        this.imgHeight = this.image.offsetHeight;
+        this.imgWidth = this.image.offsetWidth;
         this.fireCooldown = true;
         setTimeout(() => {
             this.fireCooldown = false;
@@ -629,7 +561,7 @@ class TheFinalWeapon extends Tool {
 
         playAudio("noise/laser_start.mp3");
 
-        this.loopNoise = createElem("audio", {src: "noise/laser_loop.mp3", loop: true});
+        this.loopNoise = createElem("audio", {src: "noise/laser_loop.mp3", loop: true}) as HTMLAudioElement;
         this.loopNoise.play();
 
         this.timeout = setTimeout(() => {
@@ -644,24 +576,21 @@ class TheFinalWeapon extends Tool {
 
 class Oscar extends MovingShit {
     static size = 3
+    oilCooldown = 1
+    trashCooldown = 300
+    shootCooldown = 100
+    health = 200
+    dead = false
+    shits: Shit[] = []
     
-    constructor(x, y, victims, parentElem, projectiles) {
+    constructor(x: number, y: number, private victims: Player[], parentElem: Node, private projectiles: Entity[]) {
         super(x, y, parentElem, ["img/oscar.png"], 5);
-        // super(x, y, 0.1, parentElem, ["img/oscar.png"], 5);
         this.image.width = Oscar.size * tileSize;
         this.imgWidth *= Oscar.size;
         this.imgHeight *= Oscar.size;
-        this.projectiles = projectiles;
-        this.shits = [];
-        this.oilCooldown = 1;
-        this.trashCooldown = 300;
-        this.shootCooldown = 100;
-        this.health = 200;
-        this.dead = false;
-        this.victims = victims;
     }
 
-    findDestination() {
+    findDestination(): [number, number] {
         return [bound(this.x + Oscar.size / 2 + Math.random() * 20 - 10, 0, mapWidth), bound(this.y + Oscar.size / 2 + Math.random() * 20 - 10, 0, mapHeight)];
     }
     
@@ -704,28 +633,51 @@ const mapWidth = 40;
 const mapHeight = 40;
 const trashPos = [0, 0];
 
-const trashElem = createElem("img", {src: "img/trash.png", width: tileSize, height: tileSize}, {position: "absolute", left: `${trashPos[0] * tileSize}px`, top: `${trashPos[1] * tileSize}px`});
+const trashElem = createElem("img", {src: "img/trash.png", width: tileSize, height: tileSize}, {position: "absolute", left: `${trashPos[0] * tileSize}px`, top: `${trashPos[1] * tileSize}px`}) as HTMLImageElement;
+let trashCounter: HTMLElement
 
 addEventListener("DOMContentLoaded", () => {
-    document.getElementById("trashCounter").textContent = `Trash: ${localStorage.getItem("money") ?? 0}`;
-    document.getElementById("resetBtn").addEventListener("click", () => {
+    // typescript bruh
+    const tmpTrashCounter = document.getElementById("trashCounter");
+    if (tmpTrashCounter === null) {
+        throw new Error("where the trash counter bro")
+    }
+    trashCounter = tmpTrashCounter;
+    trashCounter.textContent = `Trash: ${localStorage.getItem("money") ?? 0}`;
+
+    const resetBtn = document.getElementById("resetBtn");
+    if (resetBtn === null) {
+        throw new Error("where the reset button bro");
+    }
+    resetBtn.addEventListener("click", () => {
         localStorage.clear();
         window.location.reload();
     })
-    document.getElementById("playButton").addEventListener("click", () => {
+
+    const playBtn = document.getElementById("playButton");
+    if (playBtn === null) {
+        throw new Error("where the play button bro");
+    }
+    playBtn.addEventListener("click", () => {
         if (localStorage.getItem("startTime") === null) {
-            localStorage.setItem("startTime", Date.now());
+            localStorage.setItem("startTime", String(Date.now()));
         }
         document.body.style.backgroundImage = "url('img/background.png')";
-        document.getElementById("playScreen").style.display = "none";
+    
+        const playScreen = document.getElementById("playScreen");
+        if (playScreen === null) {
+            throw new Error("where the play screen bro");
+        }
+        playScreen.style.display = "none";
+    
         const gameDiv = createElem("div", {}, {position: "absolute", left: "0", top: `${topOffset}px`, overflow: "hidden", display: "block", width: `${tileSize * mapWidth}px`, height: `${tileSize * mapHeight}px`, userSelect: "none"});
         gameDiv.appendChild(createElem("audio", {src: "noise/ocean.mp3", loop: true, autoplay: true, }))
         gameDiv.addEventListener("dragstart", event => event.preventDefault());
         gameDiv.appendChild(trashElem);
         document.body.appendChild(gameDiv);
 
-        let shit = [];
-        const projectiles = [];
+        let shit: Shit[] = [];
+        const projectiles: Entity[] = [];
         const tool = localStorage.getItem("harpoon") ? new HarpoonGun(1000 * 0.9 ** (Number(localStorage.getItem("coffee") ?? 0)), projectiles, gameDiv) : new Net(gameDiv, 1, 1);
         const player = new Player(5, 5, gameDiv, tool, shit);
         let level = 2;
@@ -790,16 +742,20 @@ addEventListener("DOMContentLoaded", () => {
         requestAnimationFrame(gameLoop);
         function cleanUp() {
             gameDiv.remove();
-            document.getElementById("playScreen").style.display = "flex";
+            if (playScreen !== null) {
+                playScreen.style.display = "flex";
+            }
             document.body.style.backgroundImage = "url('img/pixil-frame-0.png')";
             localStorage.removeItem("startTime");
-            document.getElementById("timer-display").textContent = "0 : 0 : 0";
+            if (timerDisplay !== null) {
+                timerDisplay.textContent = "0 : 0 : 0";
+            }
         }
     });
     
 })
 
-function dLev(one, two) {
+function dLev(one: string, two: string) {
     let alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890- \'.,';
     let da = new Array(alphabet.length).fill(0);
     let matrix = new Array(one.length + 2).fill(0).map(() => new Array(two.length + 2).fill(0));
@@ -838,19 +794,24 @@ function dLev(one, two) {
     return matrix[one.length + 1][two.length + 1];
 }
 
-function prefixDLev(one, two) {
+function prefixDLev(one: string, two: string) {
     return dLev(one.substring(0, two.length), two);
+}
+
+const timerDisplay = document.getElementById("timer-display");
+if (timerDisplay === null) {
+    throw new Error("where the timer display")
 }
 
 setInterval(() => {
     const startTime = localStorage.getItem("startTime");
     if (startTime === null) {
-        document.getElementById("timer-display").textContent = "0 : 0 : 0";
+        timerDisplay.textContent = "0 : 0 : 0";
         return;
     }
     const elapsedTime = Date.now() - Number(startTime);
     const milliseconds = elapsedTime % 1000;
     const seconds = Math.floor(elapsedTime / 1000) % 60;
     const minutes = Math.floor(elapsedTime / 60 / 1000);
-    document.getElementById("timer-display").textContent = `${minutes} : ${seconds} : ${milliseconds}`;
+    timerDisplay.textContent = `${minutes} : ${seconds} : ${milliseconds}`;
 })

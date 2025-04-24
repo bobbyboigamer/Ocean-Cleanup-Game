@@ -1,4 +1,4 @@
-function createElem(type, properties = {}, styles = {}, ...children) {
+function createElem(type: string, properties = {}, styles = {}, ...children: Node[]) {
     const elem = document.createElement(type);
     Object.assign(elem, properties);
     Object.assign(elem.style, styles);
@@ -9,7 +9,7 @@ function createElem(type, properties = {}, styles = {}, ...children) {
 }
 
 // do this better bruh
-const achievementDescriptions = {
+const achievementDescriptions: Record<string, string> = {
     rockefeller: "Waste over a thousand trash"
 }
 
