@@ -497,7 +497,7 @@ class Oil extends Entity {
 
 class TheFinalWeapon extends Tool {
     fireCooldown = false;
-    timeout = NaN;
+    timeout: Parameters<typeof clearInterval>[0] | undefined = undefined;
     loopNoise: HTMLAudioElement | undefined = undefined
     hitOscar = false;
 
@@ -521,12 +521,12 @@ class TheFinalWeapon extends Tool {
             this.loopNoise.remove();
             this.loopNoise = undefined;
         }
-        this.timeout = NaN;
+        this.timeout = undefined;
         this.hitOscar = false;
     }
 
     update() {
-        if (!isNaN(this.timeout)) {
+        if (this.timeout !== undefined) {
             const thisToOscar = Math.atan2(this.oscar.y + Oscar.size / 2 - this.y, this.oscar.x + Oscar.size / 2 - this.x);
             let hitSomething = false;
             if (Math.abs(angleDiff(thisToOscar, this.rotation)) < Math.PI / 16) {
