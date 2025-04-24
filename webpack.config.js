@@ -23,9 +23,9 @@ module.exports = {
     },
     mode: "development",
     entry: {
-        index: "./src/index.ts",
-        achievements: "./src/achievements.ts",
-        shop: "./src/shop.ts",
+        index: "./src/pages/index.ts",
+        achievements: "./src/pages/achievements.ts",
+        shop: "./src/pages/shop.ts",
     },
     output: {
 	    filename: '[name].bundle.js',

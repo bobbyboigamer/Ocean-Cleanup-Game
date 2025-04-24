@@ -18,5 +18,5 @@
             "tslib": ["./node_modules/tslib/tslib.d.ts"]
         }
     },
-    "include": ["src/*", "src/shit/*", "maps/maps.d.ts", "noise/noise.d.ts"]
+    "include": ["src/*", "src/pages/*"]
 }

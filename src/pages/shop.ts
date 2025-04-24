@@ -1,4 +1,5 @@
-import { createElem, playAudio } from "./randomShit";
+import { doAchievement } from "../achievements";
+import { createElem, playAudio } from "../randomShit";
 
 const trashCounter = document.getElementById("trashCounter");
 if (trashCounter === null) {
@@ -115,7 +116,7 @@ for (const item of items) {
         localStorage.setItem("moneyWasted", String(oldMoneyWasted + cost));
         console.log(oldMoneyWasted, oldMoneyWasted + cost)
         if (oldMoneyWasted < 1000 && oldMoneyWasted + cost > 1000) {
-            doAchievement("Rockefeller", "../img/rockefeller.jpg");
+            doAchievement("Rockefeller");
         }
         localStorage.setItem("money", String(money));
         trashCounter.textContent = `Trash: ${money}`;
@@ -128,19 +129,4 @@ for (const item of items) {
     })
     shopItem.classList.add("shopItem");
     shopItems.appendChild(shopItem);
-}
-
-function doAchievement(name: string, imgSrc: string ) {
-    localStorage.setItem(`achievement${name}`, "../img/rockefeller.jpg");
-    const achievementName = document.getElementById("achievementName")
-    const achievementImg = document.getElementById("achievementImg") as HTMLImageElement;
-    const achievementNotif = document.getElementById("achievementNotif");
-    if (achievementName === null || achievementImg === null || achievementNotif === null) {
-        throw new Error("where the achievement stuff bro");
-    }
-    achievementName.textContent = name;
-    achievementImg.src = imgSrc;
-    achievementNotif.style.right = "0";
-    setTimeout(() => achievementNotif.style.right = "-300px", 4000);
-    playAudio("../noise/challenge.mp3");
 }

@@ -1,4 +1,4 @@
-import { angleDiff, bound, createElem, dist, playAudio, polarToCartesian, scaleVector } from "./randomShit"
+import { angleDiff, bound, createElem, dist, playAudio, polarToCartesian, scaleVector } from "../randomShit"
 
 // wow global variables
 let oldScrollX = 0
