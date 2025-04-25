@@ -1,4 +1,4 @@
-import { createAchievementElem, doAchievement } from "../achievements";
+import { achievementDescriptions, createAchievementElem, doAchievement } from "../achievements";
 import { createElem, playAudio } from "../randomShit";
 
 
@@ -26,7 +26,8 @@ interface shopItem {
     description: string
     baseCost: number,
     costMultiplier: number,
-    currentLevel?: number
+    currentLevel?: number,
+    lvlAchievements?: {level: number, achievementName: string}[]
 }
 
 const items: shopItem[] = [
@@ -52,7 +53,8 @@ const items: shopItem[] = [
         title: "Speed Upgrade",
         description: "Speed up your cleanup!",
         baseCost: 15,
-        costMultiplier: 1.5
+        costMultiplier: 1.5,
+        lvlAchievements: [{level: 10, achievementName: "Very speed"}]
     },
     {
         name: "coffee",
@@ -124,6 +126,15 @@ for (const item of items) {
         const level = Number(localStorage.getItem(item.name) ?? 0) + 1;
         localStorage.setItem(item.name, String(level));
         item.currentLevel = level;
+
+        if (item.lvlAchievements !== undefined) {
+            for (const lvlAchievement of item.lvlAchievements) {
+                if (level > lvlAchievement.level) {
+                    doAchievement(lvlAchievement.achievementName);
+                }
+            }
+        }
+
         money -= cost;
         // this is so dumb and they dont pay me enough i want to kill myself what am i doing
         const oldMoneyWasted = Number(localStorage.getItem("moneyWasted") ?? 0)

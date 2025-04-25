@@ -1,6 +1,6 @@
 #achievementNotif {
     transition: right 1s;
-    right: -400px;
+    right: -405px;
     top: 0;
     position: fixed;
 }
@@ -13,6 +13,7 @@
     padding: 5px;
     box-sizing: border-box;
     color: white;
+    margin: 5px;
 }
 
 .achievement img {
@@ -22,6 +23,7 @@
     display: inline-block;
     vertical-align: middle;
     margin: 5px;
+    image-rendering: pixelated;
 }
 
 .achievement #bruh {

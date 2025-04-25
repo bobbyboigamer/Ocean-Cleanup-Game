@@ -580,7 +580,7 @@ class Oscar extends MovingShit {
     oilCooldown = 1
     trashCooldown = 300
     shootCooldown = 100
-    health = 20
+    health = 200
     dead = false
     shits: Shit[] = []
     
@@ -682,7 +682,7 @@ addEventListener("DOMContentLoaded", () => {
         const projectiles: Entity[] = [];
         const tool = localStorage.getItem("harpoon") ? new HarpoonGun(1000 * 0.9 ** (Number(localStorage.getItem("coffee") ?? 0)), projectiles, gameDiv) : new Net(gameDiv, 1, 1);
         const player = new Player(5, 5, gameDiv, tool, shit);
-        let level = 2;
+        let level = -1;
         
         function gameLoop() {
             player.update();
@@ -737,6 +737,12 @@ addEventListener("DOMContentLoaded", () => {
             } else if (level === 4) {
                 if (Date.now() - Number(localStorage.getItem("startTime") ?? -Infinity) < 6 * 60 * 1000 && Number(localStorage.getItem("moneyWasted") ?? 0) === 0) {
                     doAchievement("Speedrun");
+                }
+                if (player.health > 80) {
+                    doAchievement("Regen is too easy");
+                }
+                if (player.health <= 10) {
+                    doAchievement("Not even close");
                 }
                 cleanUp();
                 idkAlert("You win!");

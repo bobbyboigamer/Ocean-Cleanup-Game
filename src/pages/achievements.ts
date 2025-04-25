@@ -10,8 +10,10 @@ function createElem(type: string, properties = {}, styles = {}, ...children: Nod
     return elem;
 }
 
+let noAchievements = true;
 for (const key in localStorage) {
     if (key.indexOf("achievement") === 0) {
+        noAchievements = false;
         const achievementName = key.substring("achievement".length);
         const elem = createElem("div", {}, {},
             createElem("img", {id: "achievementImg", src: achievementDescriptions[achievementName.toLowerCase()].img}),
@@ -23,4 +25,8 @@ for (const key in localStorage) {
         elem.classList.add("achievement");
         document.body.appendChild(elem);
     }
+}
+
+if (noAchievements) {
+    document.body.appendChild(createElem("p", {textContent: "go get some achievements"}))
 }

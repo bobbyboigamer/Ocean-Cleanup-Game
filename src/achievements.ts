@@ -12,6 +12,18 @@ export const achievementDescriptions: Record<string, {description: string, img: 
     optor: {
         description: "Throw away a shit ton of trash for no reason",
         img: "../img/optor.png"
+    },
+    "regen is too easy": {
+        description: "Don't abuse regeneration",
+        img: "../img/hardcoreheart.png"
+    },
+    "not even close": {
+        description: "Win with less than 10 health",
+        img: "../img/notevenclose.png"
+    },
+    "very speed": {
+        description: "Go very fast",
+        img: "../img/veryspeed.png"
     }
 }
 
@@ -44,6 +56,6 @@ export function doAchievement(name: keyof typeof achievementDescriptions) {
     achievementName.textContent = name;
     achievementImg.src = achievementDescriptions[name.toLowerCase()].img;
     achievementNotif.style.right = "0";
-    setTimeout(() => achievementNotif.style.right = "-400px", 4000);
+    setTimeout(() => achievementNotif.style.right = "-405px", 4000);
     playAudio("../noise/challenge.mp3");
 }
