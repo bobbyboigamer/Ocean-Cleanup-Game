@@ -1,3 +1,4 @@
+import { createAchievementElem, doAchievement } from "../achievements"
 import { angleDiff, bound, createElem, dist, playAudio, polarToCartesian, scaleVector } from "../randomShit"
 
 // wow global variables
@@ -579,7 +580,7 @@ class Oscar extends MovingShit {
     oilCooldown = 1
     trashCooldown = 300
     shootCooldown = 100
-    health = 200
+    health = 20
     dead = false
     shits: Shit[] = []
     
@@ -637,6 +638,7 @@ const trashElem = createElem("img", {src: "img/trash.png", width: tileSize, heig
 let trashCounter: HTMLElement
 
 addEventListener("DOMContentLoaded", () => {
+    document.body.appendChild(createAchievementElem());
     // typescript bruh
     const tmpTrashCounter = document.getElementById("trashCounter");
     if (tmpTrashCounter === null) {
@@ -680,7 +682,7 @@ addEventListener("DOMContentLoaded", () => {
         const projectiles: Entity[] = [];
         const tool = localStorage.getItem("harpoon") ? new HarpoonGun(1000 * 0.9 ** (Number(localStorage.getItem("coffee") ?? 0)), projectiles, gameDiv) : new Net(gameDiv, 1, 1);
         const player = new Player(5, 5, gameDiv, tool, shit);
-        let level = -1;
+        let level = 2;
         
         function gameLoop() {
             player.update();
@@ -733,6 +735,10 @@ addEventListener("DOMContentLoaded", () => {
                 localStorage.clear();
                 cleanUp();
             } else if (level === 4) {
+                console.log(Date.now() - Number(localStorage.getItem("startTime") ?? -Infinity), Number(localStorage.getItem("moneyWasted") ?? 0));
+                if (Date.now() - Number(localStorage.getItem("startTime") ?? -Infinity) < 6 * 60 * 1000 && Number(localStorage.getItem("moneyWasted") ?? 0) === 0) {
+                    doAchievement("Speedrun");
+                }
                 cleanUp();
                 idkAlert("You win!");
             } else {

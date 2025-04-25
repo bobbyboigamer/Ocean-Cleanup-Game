@@ -1,12 +1,12 @@
 #achievementNotif {
     transition: right 1s;
-    right: -300px;
+    right: -400px;
     top: 0;
     position: fixed;
 }
 
 .achievement {
-    width: 300px;
+    width: 400px;
     background-color: rgb(33, 33, 33);
     border: 5px solid rgb(85, 85, 85);
     border-radius: 10px;

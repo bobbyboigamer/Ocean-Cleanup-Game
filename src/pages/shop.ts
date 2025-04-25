@@ -1,11 +1,23 @@
-import { doAchievement } from "../achievements";
+import { createAchievementElem, doAchievement } from "../achievements";
 import { createElem, playAudio } from "../randomShit";
+
 
 const trashCounter = document.getElementById("trashCounter");
 if (trashCounter === null) {
     throw new Error("where my trash counter bro");
 }
 trashCounter.textContent = `Trash: ${localStorage.getItem("money") ?? 0}`;
+
+let optorCounter = 0;
+document.getElementById("optor")?.addEventListener("click", () => {
+    localStorage.setItem("money", String(Number(localStorage.getItem("money") ?? 0) - 5));
+    playAudio("../noise/oof.mp3");
+    trashCounter.textContent = `Trash: ${localStorage.getItem("money") ?? 0}`;
+    optorCounter++;
+    if (optorCounter >= 50) {
+        doAchievement("Optor");
+    }
+});
 
 interface shopItem {
     name: string
@@ -82,6 +94,8 @@ const items: shopItem[] = [
     }
 ];
 
+document.getElementById("shopPage")?.appendChild(createAchievementElem());
+
 const shopItems = document.getElementById("shopItems");
 if (shopItems === null) {
     throw new Error("where the shop items bro");
@@ -114,7 +128,6 @@ for (const item of items) {
         // this is so dumb and they dont pay me enough i want to kill myself what am i doing
         const oldMoneyWasted = Number(localStorage.getItem("moneyWasted") ?? 0)
         localStorage.setItem("moneyWasted", String(oldMoneyWasted + cost));
-        console.log(oldMoneyWasted, oldMoneyWasted + cost)
         if (oldMoneyWasted < 1000 && oldMoneyWasted + cost > 1000) {
             doAchievement("Rockefeller");
         }
