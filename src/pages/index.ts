@@ -122,7 +122,7 @@ class Player extends Entity {
     takeDamage(amount: number) {
         amount *= this.defense;
         this.health = bound(this.health - amount, 0, this.maxHealth);
-        playAudio(`../../noise/hit${Math.floor(Math.random() * 3) + 1}.mp3`);
+        playAudio(`../noise/hit${Math.floor(Math.random() * 3) + 1}.mp3`);
     }
 
     update(deltaTime: number) {
