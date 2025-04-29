@@ -10,6 +10,7 @@ lib.dom.d.ts(28679, 13): 'scrollX' was also declared here.
 */
 let fakeScrollX = 0
 let fakeScrollY = 0
+const frameMs = 1000 / 60;
 
 class Entity {
     oldX = NaN
@@ -41,7 +42,7 @@ class Entity {
         this.imgWidth = size * tileSize;
     }
 
-    update() {
+    update(_: number) {
         this.x = bound(this.x, 0, mapWidth - 1);
         this.y = bound(this.y, 0, mapHeight - 1);
         if (oldScrollX !== fakeScrollX || oldScrollY !== fakeScrollY || this.oldX !== this.x || this.oldY !== this.y || this.rotation !== this.oldRotation) {
@@ -124,21 +125,22 @@ class Player extends Entity {
         playAudio(`../../noise/hit${Math.floor(Math.random() * 3) + 1}.mp3`);
     }
 
-    update() {
+    update(deltaTime: number) {
         if (this.imgHeight === 0) {
             this.imgHeight = this.image.offsetHeight;
         }
+        const speed = this.speed * deltaTime / frameMs;
         if (keys.get("w")) {
-            this.y -= this.speed;
+            this.y -= speed;
         }
         if (keys.get("s")) {
-            this.y += this.speed;
+            this.y += speed;
         }
         if (keys.get("a")) {
-            this.x -= this.speed;
+            this.x -= speed;
         }
         if (keys.get("d")) {
-            this.x += this.speed;
+            this.x += speed;
         }
         if ((this.x !== this.oldX || this.y !== this.oldY) && !isNaN(this.oldX) && !isNaN(this.oldY)) {
             this.rotation = Math.atan2(this.y - this.oldY, this.x - this.oldX);
@@ -162,10 +164,10 @@ class Player extends Entity {
         }
         this.tool.x = this.x + 0.5;
         this.tool.y = this.y + 0.5;
-        this.tool.update();
+        this.tool.update(deltaTime);
         this.healthBar.value = this.health;
         this.healthBar.style.transform = `translate(${this.x * tileSize - this.imgWidth * this.rotationCenter[0] / 100 - fakeScrollX}px, ${this.y * tileSize + this.imgHeight - fakeScrollY}px)`;
-        super.update();
+        super.update(deltaTime);
     }
 
     // Function to prompt the user with a question
@@ -242,11 +244,11 @@ class Tool extends Entity {
         return value;
     }
 
-    update() {
+    update(deltaTime: number) {
         if (this.shit.length === this.maxCapacity && trashElem.src !== "../img/trashActive.png") {
             trashElem.src = "../img/trashActive.png";
         }
-        super.update();
+        super.update(deltaTime);
     }
 }
 
@@ -279,7 +281,7 @@ class Net extends Tool {
 class HarpoonGun extends Tool {
     fire = true
 
-    constructor(private fireCooldownMs: number, private projectiles: {update(): void}[], parentElem: Node) {
+    constructor(private fireCooldownMs: number, private projectiles: {update: Entity["update"]}[], parentElem: Node) {
         super("../img/harpoon.png", parentElem);
     }
 
@@ -337,18 +339,19 @@ class MovingShit extends Shit {
         this.maxDriftFrames = Math.floor(Math.random() * 300);
     }
 
-    update() {
+    update(deltaTime: number) {
         if (this.dead) {
             return;
         }
+        const speed = this.speed * deltaTime / frameMs;
         if (this.driftDirection === Direction.up) {
-            this.y -= this.speed;
+            this.y -= speed;
         } else if (this.driftDirection === Direction.down) {
-            this.y += this.speed;
+            this.y += speed;
         } else if (this.driftDirection === Direction.left) {
-            this.x -= this.speed;
+            this.x -= speed;
         } else if (this.driftDirection === Direction.right) {
-            this.x += this.speed;
+            this.x += speed;
         }
         this.driftCounter++;
         if (this.driftCounter >= this.maxDriftFrames) {
@@ -356,7 +359,7 @@ class MovingShit extends Shit {
             this.driftDirection = directions[Math.floor(Math.random() * directions.length)];
             this.maxDriftFrames = Math.floor(Math.random() * 300);
         }
-        super.update();
+        super.update(deltaTime);
     }
 }
 
@@ -371,12 +374,13 @@ class Harpoon extends Entity {
         this.rotationCenter = [0, 50];
     }
 
-    update() {
+    update(deltaTime: number) {
         if (this.dead) {
             return;
         }
-        this.x += this.moveVector[0];
-        this.y += this.moveVector[1];
+        const conversionFactor = deltaTime / frameMs;
+        this.x += this.moveVector[0] * conversionFactor;
+        this.y += this.moveVector[1] * conversionFactor;
         if (this.x < 0 || this.y < 0 || this.x >= mapWidth - 1 || this.y >= mapWidth - 1) {
             this.oof();
             return;
@@ -389,7 +393,7 @@ class Harpoon extends Entity {
                 return;
             }
         }
-        super.update();
+        super.update(deltaTime);
     }
 
     oof() {
@@ -421,7 +425,7 @@ class TrashProjectile extends Entity {
         this.moveVector = scaleVector(moveVector[0], moveVector[1], this.speed);
     }
 
-    update() {
+    update(deltaTime: number) {
         if (this.dead) {
             return;
         }
@@ -438,7 +442,7 @@ class TrashProjectile extends Entity {
                 return;
             }
         }
-        super.update();
+        super.update(deltaTime);
     }
 
     oof() {
@@ -455,7 +459,7 @@ class AttackingShit extends Shit {
         this.attackCooldown = Math.floor(Math.random() * 300) + 300;
     }
 
-    update() {
+    update(deltaTime: number) {
         if (this.dead) {
             return;
         }
@@ -470,7 +474,7 @@ class AttackingShit extends Shit {
             this.attackCooldown = Math.floor(Math.random() * 300) + 300;
             this.projectiles.push(new TrashProjectile(this.x, this.y, [this.victim.x - this.x, this.victim.y - this.y], this.projectileSpeed, [this.victim], 10, this.parentElem));
         }
-        super.update();
+        super.update(deltaTime);
     }
 }
 
@@ -481,8 +485,8 @@ class Oil extends Entity {
         super(x, y, 0, "../img/oil.png", parentElem);
     }
 
-    update() {
-        super.update();
+    update(deltaTime: number) {
+        super.update(deltaTime);
         if (this.damaged) {
             return;
         }
@@ -526,7 +530,7 @@ class TheFinalWeapon extends Tool {
         this.hitOscar = false;
     }
 
-    update() {
+    update(deltaTime: number) {
         if (this.timeout !== undefined) {
             const thisToOscar = Math.atan2(this.oscar.y + Oscar.size / 2 - this.y, this.oscar.x + Oscar.size / 2 - this.x);
             let hitSomething = false;
@@ -545,7 +549,7 @@ class TheFinalWeapon extends Tool {
                 this.endLaser();
             }
         }
-        super.update();
+        super.update(deltaTime);
     }
     
     grabShit() {
@@ -595,7 +599,7 @@ class Oscar extends MovingShit {
         return [bound(this.x + Oscar.size / 2 + Math.random() * 20 - 10, 0, mapWidth), bound(this.y + Oscar.size / 2 + Math.random() * 20 - 10, 0, mapHeight)];
     }
     
-    update() {
+    update(deltaTime: number) {
         if (this.health <= 0) {
             this.oof();
         }
@@ -615,10 +619,10 @@ class Oscar extends MovingShit {
             this.projectiles.push(new TrashProjectile(this.x, this.y, [this.victims[0].x - this.x, this.victims[0].y - this.y], 0.2, this.victims, 5, this.parentElem, victim => victim.takeDamage(20)))
         }
         this.shits = this.shits.filter(shit => {
-            shit.update();
+            shit.update(deltaTime);
             return !this.dead;
         })
-        super.update();
+        super.update(deltaTime);
     }
 
     oof() {
@@ -684,8 +688,16 @@ addEventListener("DOMContentLoaded", () => {
         const player = new Player(5, 5, gameDiv, tool, shit);
         let level = -1;
         
-        function gameLoop() {
-            player.update();
+        let prevTime = performance.now();
+        function gameLoop(now: DOMHighResTimeStamp) {
+            if (level < 4) {
+                requestAnimationFrame(gameLoop);
+            }
+            // apparently elapsed can be 0 which makes everything zoom across the map at infinite speed
+            // one solution would be to track prevPrevTime or smth but im lazy
+            const elapsed = now === prevTime ? 1000 / 60 : now - prevTime;
+            prevTime = now;
+            player.update(elapsed);
             trashElem.style.left = -fakeScrollX + "px";
             trashElem.style.top = -fakeScrollY + "px";
             if (shit.length === 0) {
@@ -718,11 +730,11 @@ addEventListener("DOMContentLoaded", () => {
                 level++;
             }
             shit = shit.filter(thing => {
-                thing.update();
+                thing.update(elapsed);
                 return !thing.dead;
             });
             for (const projectile of projectiles) {
-                projectile.update();
+                projectile.update(elapsed);
             }
             player.shits = shit;
             oldScrollX = fakeScrollX;
@@ -746,8 +758,6 @@ addEventListener("DOMContentLoaded", () => {
                 }
                 cleanUp();
                 idkAlert("You win!");
-            } else {
-                requestAnimationFrame(gameLoop);
             }
         }
         requestAnimationFrame(gameLoop);
